@@ -1,0 +1,25 @@
+<%- include('../partials/head') %>
+<%- include('../partials/navbar') %>
+<div class="nx-section">
+  <div class="text-center mb-5" data-animate>
+    <div class="hero-eyebrow" style="display:inline-flex;"><i class="bi bi-info-circle-fill"></i>Notre histoire</div>
+    <h1 class="hero-title mt-2 mb-3">Nexio<span style="color:var(--cyan);">.</span>ht</h1>
+    <p style="max-width:600px;margin:0 auto;font-size:1rem;">Plateforme e-commerce intelligente spécialisée dans la vente de matériel informatique en Haïti, propulsée par l'IA NEX.</p>
+  </div>
+  <div class="row g-4 mb-5">
+    <% [['bi-bullseye','Notre mission','Rendre la technologie accessible à tous les Haïtiens avec du matériel certifié à prix compétitifs.','var(--cyan)'],['bi-eye-fill','Notre vision','Devenir la plateforme technologique de référence en Haïti et dans la Caraïbe.','var(--blue)'],['bi-heart-fill','Nos valeurs','Excellence, intégrité, innovation et service client d'exception.','var(--danger)']].forEach(([icon,title,text,color]) => { %>
+    <div class="col-12 col-md-4" data-animate><div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;height:100%;text-align:center;">
+      <div style="width:56px;height:56px;background:rgba(0,200,255,.08);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 1.2rem;"><i class="bi <%= icon %>" style="font-size:1.5rem;color:<%= color %>;"></i></div>
+      <h3 style="font-size:1.1rem;margin-bottom:.75rem;"><%= title %></h3>
+      <p style="font-size:.88rem;line-height:1.7;"><%= text %></p>
+    </div></div>
+    <% }) %>
+  </div>
+  <div style="background:linear-gradient(135deg,#0D1F40,#0A1832);border:1px solid rgba(0,200,255,.15);border-radius:var(--radius-lg);padding:2.5rem;text-align:center;" data-animate>
+    <div style="font-size:2rem;margin-bottom:.5rem;">🤖</div>
+    <h3 style="color:var(--cyan);margin-bottom:.75rem;">Propulsé par NEX IA</h3>
+    <p style="max-width:500px;margin:0 auto 1.5rem;font-size:.9rem;">NEX est notre assistant IA intelligent qui analyse, recommande et personnalise votre expérience, utilisant GrokCloud avec le modèle llama-3.3-70b-versatile.</p>
+    <a href="/contact" class="btn-nx-cyan"><i class="bi bi-chat-dots-fill"></i>Nous contacter</a>
+  </div>
+</div>
+<%- include('../partials/footer') %>

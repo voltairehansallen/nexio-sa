@@ -1,0 +1,76 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title><%= title %> — Nexio Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script>const BASE_URL='<%- BASE_URL %>';</script>
+<%- include('./admin_styles') %>
+</head><body>
+<%- include('./admin_sidebar', { page: page, stats: stats }) %>
+<div class="main" id="mainContent">
+<%- include('./admin_topbar', { title: title }) %>
+<div class="content">
+<%- include('./admin_flash') %>
+
+<% const ca30=ventes.reduce((a,b)=>a+(+b.total||0),0); const nb30=ventes.reduce((a,b)=>a+(+b.nb||0),0); const panier=nb30>0?ca30/nb30:0; %>
+<div style="display:flex;gap:.5rem;margin-bottom:1.2rem;flex-wrap:wrap;align-items:center;">
+  <span style="font-size:.8rem;color:#64748B;font-weight:600;">Période :</span>
+  <% [7,14,30,90].forEach(j=>{ %>
+  <a href="/admin/rapports?jours=<%= j %>" class="btn <%= jours==j?'btn-primary':'btn-ghost' %> btn-sm"><%= j %> jours</a>
+  <% }) %>
+</div>
+<div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:1.2rem;">
+  <div class="kpi" style="--accent:#00C8FF;"><div class="kpi-ic" style="background:rgba(0,200,255,.08);color:#00C8FF;margin-bottom:.4rem;"><i class="bi bi-calendar3"></i></div><div class="kpi-val"><%= ventes.length %></div><div class="kpi-lbl">Jours actifs</div></div>
+  <div class="kpi" style="--accent:#10B981;"><div class="kpi-ic" style="background:rgba(16,185,129,.08);color:#10B981;margin-bottom:.4rem;"><i class="bi bi-cash-stack"></i></div><div class="kpi-val"><%= (ca30/1000).toFixed(1) %>k</div><div class="kpi-lbl">CA HTG (<%= jours %>j)</div></div>
+  <div class="kpi" style="--accent:#A5B4FC;"><div class="kpi-ic" style="background:rgba(165,180,252,.08);color:#A5B4FC;margin-bottom:.4rem;"><i class="bi bi-cart3"></i></div><div class="kpi-val"><%= Math.round(panier).toLocaleString() %></div><div class="kpi-lbl">Panier moyen HTG</div></div>
+</div>
+<% if(ventes.length){ %>
+<div class="card" style="margin-bottom:1.1rem;">
+  <div class="card-hd"><div class="card-hd-title"><i class="bi bi-graph-up text-cyan"></i>Évolution CA</div></div>
+  <div class="chart-wrap" style="height:260px;"><canvas id="chartRapport"></canvas></div>
+</div>
+<% } %>
+<div class="dash-grid">
+  <div class="card">
+    <div class="card-hd"><div class="card-hd-title"><i class="bi bi-calendar3 text-cyan"></i>Ventes par jour</div></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Commandes</th><th>CA HTG</th></tr></thead><tbody>
+    <% ventes.forEach(v=>{ %><tr><td><%= new Date(v.jour).toLocaleDateString('fr-FR') %></td><td><%= v.nb %></td><td><strong><%= Number(v.total).toLocaleString() %></strong></td></tr><% }) %>
+    <% if(!ventes.length){ %><tr><td colspan="3"><div class="empty-state" style="padding:1.5rem;"><i class="bi bi-bar-chart"></i>Aucune vente</div></td></tr><% } %>
+    </tbody></table></div>
+  </div>
+  <div>
+    <div class="card" style="margin-bottom:1.1rem;">
+      <div class="card-hd"><div class="card-hd-title"><i class="bi bi-trophy-fill" style="color:#F59E0B;"></i>Top produits</div></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Produit</th><th>Qté</th><th>CA HTG</th></tr></thead><tbody>
+      <% top.forEach(t=>{ %><tr><td style="font-size:.76rem;"><%= t.nom.substring(0,32) %></td><td><%= t.qte %></td><td><%= Number(t.ca).toLocaleString() %></td></tr><% }) %>
+      <% if(!top.length){ %><tr><td colspan="3"><div class="empty-state" style="padding:1rem;"><i class="bi bi-box"></i>—</div></td></tr><% } %>
+      </tbody></table></div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><div class="card-hd-title"><i class="bi bi-pie-chart-fill" style="color:#A5B4FC;"></i>Top catégories</div></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Catégorie</th><th>CA HTG</th></tr></thead><tbody>
+      <% cat_top.forEach(t=>{ %><tr><td><%= t.nom %></td><td><strong><%= Number(t.ca).toLocaleString() %></strong></td></tr><% }) %>
+      </tbody></table></div>
+    </div>
+  </div>
+</div>
+<script>
+<% if(ventes.length){ const labels=ventes.slice().reverse().map(v=>JSON.stringify(new Date(v.jour).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}))); const data=ventes.slice().reverse().map(v=>Number(v.total)); %>
+const ctxR=document.getElementById('chartRapport');
+if(ctxR)new Chart(ctxR,{type:'line',data:{labels:<%- JSON.stringify(labels) %>,datasets:[{label:'CA HTG',data:<%- JSON.stringify(data) %>,borderColor:'#00C8FF',backgroundColor:'rgba(0,200,255,.08)',borderWidth:2.5,fill:true,tension:.4,pointBackgroundColor:'#00C8FF',pointBorderColor:'#06080F',pointBorderWidth:2,pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#64748B',font:{size:11}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#64748B',font:{size:11},callback:v=>`${(v/1000).toFixed(0)}k`}}}}});
+<% } %>
+</script>
+</div></div>
+<script>
+function toggleSidebar(){const sb=document.getElementById('sidebar');sb.style.transform=sb.style.transform==='translateX(0px)'||sb.style.transform===''&&window.innerWidth>=1024?'translateX(-100%)':'translateX(0px)';}
+if(window.innerWidth<1024)document.getElementById('sidebar').style.transform='translateX(-100%)';
+document.querySelectorAll('.flash').forEach(el=>setTimeout(()=>{el.style.transition='opacity .4s';el.style.opacity='0';setTimeout(()=>el.remove(),400);},4500));
+async function genCampagne(id,btn){if(!confirm('Générer avec NEX IA ?'))return;const orig=btn.innerHTML;btn.innerHTML='<i class="bi bi-hourglass-split"></i>';btn.disabled=true;try{const r=await fetch(BASE_URL+'/admin/api/ia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'generer_campagne',id_campagne:id})});const d=await r.json();btn.innerHTML='<i class="bi bi-check-lg"></i>';btn.style.color='#10B981';setTimeout(()=>{btn.innerHTML=orig;btn.style.color='';btn.disabled=false;},2500);showToast(d.msg||'Campagne générée !','success');}catch{btn.innerHTML=orig;btn.disabled=false;showToast('Serveur IA indisponible','error');}}
+async function envoyerCampagne(id,btn){if(!confirm('Envoyer cette campagne maintenant ?'))return;const orig=btn.innerHTML;btn.innerHTML='<i class="bi bi-hourglass-split"></i>';btn.disabled=true;try{const r=await fetch(BASE_URL+'/admin/api/ia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'envoyer_campagne',id_campagne:id})});const d=await r.json();showToast(`Envoyée: ${d.envoyes||0}/${d.destinataires||0}`,'success');location.reload();}catch{showToast('Erreur envoi','error');}btn.innerHTML=orig;btn.disabled=false;}
+async function lancerAnalyseIA(){const r=await fetch(BASE_URL+'/admin/api/ia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'rapport_ventes',jours:30})});const d=await r.json();alert(d.analyse_ia||JSON.stringify(d).slice(0,300));}
+function showToast(msg,type='success'){const t=document.createElement('div');t.style.cssText='position:fixed;top:70px;right:1.2rem;z-index:9999;padding:.75rem 1.1rem;border-radius:10px;font-size:.83rem;font-weight:700;display:flex;align-items:center;gap:.5rem;box-shadow:0 8px 24px rgba(0,0,0,.4);max-width:340px;animation:slideDown .3s ease;';t.style.cssText+=type==='success'?'background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.25);color:#34D399;':'background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);color:#FCA5A5;';t.innerHTML=`<i class="bi bi-${type==='success'?'check-circle':'exclamation-circle'}-fill"></i>${msg}<button onclick="this.parentNode.remove()" style="margin-left:auto;background:none;border:none;color:inherit;cursor:pointer;">×</button>`;document.body.appendChild(t);setTimeout(()=>{t.style.transition='opacity .4s,transform .4s';t.style.opacity='0';t.style.transform='translateX(120%)';setTimeout(()=>t.remove(),400);},4000);}
+function badgeStatut(s){const m={'En attente':'b-wait','Confirmée':'b-ship','Expédiée':'b-ship','Livrée':'b-ok','Annulée':'b-cancel','Disponible':'b-avail','Rupture':'b-rupture','Actif':'b-ok','Inactif':'b-cancel','Brouillon':'b-warn','Envoyée':'b-ok','En cours':'b-ship','Approuvé':'b-ok','Rejeté':'b-cancel','Non lu':'b-warn','Lu':'b-ok','Répondu':'b-ship','Terminée':'b-purple','Planifiée':'b-warn'};const cls=m[s]||'b-wait';return`<span class="badge ${cls}">${s}</span>`;}
+function pagi(pages,cur,base){if(pages<=1)return'';let h='<div class="pagi">';for(let i=1;i<=pages;i++){const u=base+'&pg='+i;if(i===cur)h+=`<span class="cur">${i}</span>`;else h+=`<a href="${u}">${i}</a>`;}return h+'</div>';}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+</script>
+<style>@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}</style>
+</body></html>

@@ -1,0 +1,75 @@
+<% const panier_count_nav = panier_count || 0; %>
+<div class="nx-topbar">
+  <div style="display:flex;gap:1.4rem;">
+    <span><i class="bi bi-geo-alt-fill"></i> Delmas, Port-au-Prince</span>
+    <span><i class="bi bi-clock-fill"></i> Lun–Sam 8h–18h</span>
+    <span><i class="bi bi-telephone-fill"></i> 4810-8541</span>
+  </div>
+  <div style="display:flex;gap:1.2rem;">
+    <a href="/about">À propos</a>
+    <a href="/contact">Contact</a>
+  </div>
+</div>
+<nav class="nx-nav">
+  <div class="nx-nav-inner">
+    <button class="nx-toggler" id="navToggler"><i class="bi bi-list"></i></button>
+    <a href="/" class="nx-logo"><i class="bi bi-cpu-fill"></i>Nexio<span class="dot">.</span>ht</a>
+
+    <div class="nx-search d-none d-sm-block">
+      <form class="nx-search-inner" method="GET" action="/">
+        <input type="text" name="q" placeholder='Rechercher un produit...' value="<%= typeof q !== 'undefined' ? q : '' %>" autocomplete="off">
+        <button type="submit"><i class="bi bi-search"></i><span>Chercher</span></button>
+      </form>
+    </div>
+
+    <div class="nx-actions">
+      <% if (isLoggedIn) { %>
+        <a href="/compte" class="btn-nav" title="Mon compte">
+          <i class="bi bi-person-circle" style="font-size:1.1rem;color:var(--blue);"></i>
+          <span class="d-none d-lg-inline"><%= user.prenom %></span>
+        </a>
+        <% if (isAdmin) { %>
+          <a href="/admin" class="btn-nav d-none d-lg-flex" title="Administration">
+            <i class="bi bi-speedometer2"></i><span>Admin</span>
+          </a>
+        <% } %>
+        <a href="/wishlist" class="btn-nav d-none d-md-flex" title="Favoris">
+          <i class="bi bi-heart-fill" style="color:var(--danger);"></i>
+        </a>
+        <a href="/auth/logout" class="btn-nav d-none d-xl-flex" title="Déconnexion">
+          <i class="bi bi-box-arrow-right"></i>
+        </a>
+      <% } else { %>
+        <a href="/auth/login" class="btn-nav d-none d-sm-flex"><i class="bi bi-person"></i><span>Connexion</span></a>
+        <a href="/auth/register" class="btn-nav btn-nav-primary"><i class="bi bi-person-plus"></i><span>S'inscrire</span></a>
+      <% } %>
+      <a href="/panier" class="btn-nav cart-wrap" title="Panier">
+        <i class="bi bi-bag2" style="font-size:1.05rem;"></i>
+        <span class="d-none d-sm-inline">Panier</span>
+        <% if (panier_count_nav > 0) { %><span class="cart-dot"><%= panier_count_nav %></span><% } %>
+      </a>
+    </div>
+  </div>
+
+  <!-- Menu mobile -->
+  <div class="nx-mobile-menu" id="navMobileMenu">
+    <form class="nx-search-inner" method="GET" action="/" style="margin-bottom:.6rem;">
+      <input type="text" name="q" placeholder="Rechercher..." value="<%= typeof q !== 'undefined' ? q : '' %>">
+      <button type="submit"><i class="bi bi-search"></i></button>
+    </form>
+    <a href="/" class="btn-nav" style="justify-content:flex-start;"><i class="bi bi-house-fill"></i>Accueil</a>
+    <% if (isLoggedIn) { %>
+      <a href="/compte"   class="btn-nav" style="justify-content:flex-start;"><i class="bi bi-person-circle"></i>Mon compte</a>
+      <a href="/wishlist" class="btn-nav" style="justify-content:flex-start;"><i class="bi bi-heart"></i>Mes favoris</a>
+      <% if (isAdmin) { %><a href="/admin" class="btn-nav" style="justify-content:flex-start;color:var(--blue);"><i class="bi bi-speedometer2"></i>Administration</a><% } %>
+      <div class="nx-divider"></div>
+      <a href="/auth/logout" class="btn-nav" style="justify-content:flex-start;color:var(--danger);"><i class="bi bi-box-arrow-right"></i>Déconnexion</a>
+    <% } else { %>
+      <a href="/auth/login"    class="btn-nav" style="justify-content:flex-start;"><i class="bi bi-person"></i>Connexion</a>
+      <a href="/auth/register" class="btn-nav btn-nav-primary" style="justify-content:flex-start;"><i class="bi bi-person-plus"></i>S'inscrire</a>
+    <% } %>
+    <div class="nx-divider"></div>
+    <a href="/about"   class="btn-nav" style="justify-content:flex-start;font-size:.78rem;color:var(--muted);"><i class="bi bi-info-circle"></i>À propos</a>
+    <a href="/contact" class="btn-nav" style="justify-content:flex-start;font-size:.78rem;color:var(--muted);"><i class="bi bi-envelope"></i>Contact</a>
+  </div>
+</nav>

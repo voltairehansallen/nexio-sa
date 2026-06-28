@@ -1,0 +1,592 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title><%= title %> — Nexio Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<script>const BASE_URL='<%- BASE_URL %>';</script>
+<%- include('./admin_styles') %>
+<style>
+/* ── Agents grid ────────────────────────────────────────────── */
+.agents-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.75rem;margin-bottom:1.4rem;}
+.agent-card{background:#0D1117;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:.9rem 1rem;display:flex;flex-direction:column;gap:.4rem;transition:all .2s;}
+.agent-card:hover{border-color:rgba(0,200,255,.15);transform:translateY(-2px);}
+.agent-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.dot-ok{background:#10B981;box-shadow:0 0 6px rgba(16,185,129,.5);}
+.dot-warn{background:#F59E0B;box-shadow:0 0 6px rgba(245,158,11,.5);}
+.dot-off{background:#374151;}
+.agent-name{font-size:.78rem;font-weight:700;}
+.agent-route{font-size:.66rem;color:#475569;font-family:monospace;}
+
+/* ── Message generator ──────────────────────────────────────── */
+.msg-gen{background:linear-gradient(135deg,#0A0F1A,#060A12);border:1px solid rgba(0,200,255,.12);border-radius:16px;padding:1.5rem;margin-bottom:1.1rem;}
+.msg-gen-title{font-size:.95rem;font-weight:900;color:#00C8FF;display:flex;align-items:center;gap:.5rem;margin-bottom:1.2rem;}
+.msg-result{display:none;margin-top:1.2rem;animation:slideDown .3s ease;}
+.msg-box{background:#060A12;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:1.2rem;margin-bottom:.75rem;}
+.msg-box-label{font-size:.62rem;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem;}
+.msg-content{font-size:.85rem;color:#CBD5E1;line-height:1.7;white-space:pre-wrap;}
+.msg-meta{font-size:.75rem;color:#64748B;font-style:italic;margin-top:.4rem;}
+.canal-tabs{display:flex;gap:.4rem;margin-bottom:.9rem;flex-wrap:wrap;}
+.canal-tab{padding:.38rem .85rem;border-radius:7px;font-size:.75rem;font-weight:700;cursor:pointer;border:1px solid;transition:all .18s;}
+.canal-tab.email{background:rgba(29,78,216,.08);border-color:rgba(29,78,216,.2);color:#60A5FA;}
+.canal-tab.email.active{background:rgba(29,78,216,.2);border-color:#1D4ED8;}
+.canal-tab.whatsapp{background:rgba(37,211,102,.06);border-color:rgba(37,211,102,.15);color:#25D366;}
+.canal-tab.whatsapp.active{background:rgba(37,211,102,.18);border-color:#25D366;}
+.canal-tab.facebook{background:rgba(24,119,242,.06);border-color:rgba(24,119,242,.15);color:#60A5FA;}
+.canal-tab.facebook.active{background:rgba(24,119,242,.18);border-color:#1877F2;}
+.ton-sel{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.9rem;}
+.ton-btn{padding:.3rem .7rem;border-radius:6px;font-size:.72rem;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:#64748B;transition:all .15s;}
+.ton-btn.active{background:rgba(0,200,255,.1);border-color:rgba(0,200,255,.25);color:#00C8FF;}
+.promo-badge{display:inline-flex;align-items:center;gap:.4rem;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.2);color:#FB923C;padding:.3rem .75rem;border-radius:6px;font-size:.8rem;font-weight:800;letter-spacing:.05em;}
+.copy-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:#94A3B8;padding:.28rem .6rem;border-radius:6px;font-size:.7rem;cursor:pointer;transition:all .15s;}
+.copy-btn:hover{background:rgba(255,255,255,.1);color:#EDF2F7;}
+.spin{animation:spin .8s linear infinite;}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+@media(max-width:768px){.agents-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head><body>
+<%- include('./admin_sidebar', { page: page, stats: stats }) %>
+<div class="main" id="mainContent">
+<%- include('./admin_topbar', { title: title }) %>
+<div class="content">
+<%- include('./admin_flash') %>
+
+<!-- Statut serveur IA -->
+<div class="card" style="margin-bottom:1.1rem;">
+  <div class="card-hd">
+    <div class="card-hd-title"><i class="bi bi-activity text-cyan"></i>Statut des agents IA</div>
+    <div style="display:flex;align-items:center;gap:.5rem;">
+      <div class="agent-dot dot-ok" id="serverDot"></div>
+      <span style="font-size:.75rem;color:#64748B;" id="serverStatus">Vérification…</span>
+      <button class="btn btn-ghost btn-sm" onclick="checkStatus()"><i class="bi bi-arrow-clockwise"></i>Rafraîchir</button>
+    </div>
+  </div>
+  <div class="card-body" style="padding-top:.5rem;">
+    <div class="agents-grid" id="agentsGrid">
+      <% const agentsList = [
+        {id:1,  nom:'Analyse Comportementale', route:'/comportement',      icon:'bi-person-lines-fill', color:'#00C8FF'},
+        {id:2,  nom:'Recommandation',           route:'/recommander',       icon:'bi-stars',             color:'#A5B4FC'},
+        {id:3,  nom:'Marketing',                route:'/campagne',          icon:'bi-megaphone-fill',    color:'#F59E0B'},
+        {id:4,  nom:'Analyse Ventes',           route:'/rapport-ventes',   icon:'bi-graph-up-arrow',    color:'#34D399'},
+        {id:5,  nom:'Prévisions',               route:'/previsions',        icon:'bi-clipboard2-data',   color:'#60A5FA'},
+        {id:6,  nom:'Stock Intelligence',       route:'/stocks',            icon:'bi-archive-fill',      color:'#FB923C'},
+        {id:7,  nom:'Chatbot NEX',              route:'/chat-api',          icon:'bi-robot',             color:'#A5B4FC'},
+        {id:10, nom:'Détection Fraude',         route:'/fraude',            icon:'bi-shield-fill',       color:'#EF4444'},
+        {id:11, nom:'Sentiment Analysis',       route:'/sentiment',         icon:'bi-emoji-smile-fill',  color:'#F472B6'},
+        {id:12, nom:'Profil Complet',           route:'/profil-complet',    icon:'bi-person-badge-fill', color:'#00C8FF'},
+        {id:13, nom:'Campagne IA',              route:'/message-ia',        icon:'bi-lightning-fill',    color:'#F59E0B'},
+        {id:14, nom:'Publicités',               route:'/publicites',        icon:'bi-display-fill',      color:'#A5B4FC'},
+        {id:15, nom:'Envoi Multi-canal',        route:'/envoyer',           icon:'bi-send-fill',         color:'#34D399'},
+      ]; %>
+      <% agentsList.forEach(a => { %>
+      <div class="agent-card" id="agent_<%= a.id %>">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <i class="bi <%= a.icon %>" style="color:<%= a.color %>;font-size:1.1rem;"></i>
+          <div class="agent-dot dot-warn" id="dot_<%= a.id %>"></div>
+        </div>
+        <div class="agent-name"><%= a.nom %></div>
+        <div class="agent-route"><%= a.route %></div>
+      </div>
+      <% }) %>
+    </div>
+    <div style="font-size:.72rem;color:#374151;margin-top:.25rem;">
+      <i class="bi bi-info-circle"></i> Modèle : <strong style="color:#64748B;">llama-3.3-70b-versatile</strong> via GrokCloud · 
+      <span id="modelStatus" style="color:#64748B;">Vérification de la clé API…</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ GÉNÉRATEUR DE MESSAGE PERSONNALISÉ ══════════════════════ -->
+<div class="msg-gen">
+  <div class="msg-gen-title">
+    <i class="bi bi-magic"></i>
+    Générateur de message personnalisé IA
+    <span style="font-size:.65rem;background:rgba(0,200,255,.1);border:1px solid rgba(0,200,255,.2);color:#00C8FF;padding:.15rem .5rem;border-radius:4px;font-weight:700;margin-left:.3rem;">NEX IA</span>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+    <!-- Sélection client -->
+    <div>
+      <label class="nx-label">Client cible</label>
+      <select id="selectUser" class="nx-input" style="margin:0;" onchange="loadProfil(this.value)">
+        <option value="">-- Choisir un client --</option>
+        <% (clients||profils).forEach(p => { %>
+        <option value="<%= p.id_user %>"
+                data-prenom="<%= p.prenom %>"
+                data-nom="<%= p.nom %>"
+                data-email="<%= p.email||'' %>"
+                data-engagement="<%= p.score_engagement||0 %>"
+                data-fidelite="<%= p.score_fidelite||0 %>"
+                data-cats="<%= p.categories_preferees||'[]' %>"
+                data-budget="<%= Math.round(p.panier_moyen||0).toLocaleString() %>">
+          <%= p.prenom %> <%= p.nom %><%= p.score_engagement ? ' — Score: '+p.score_engagement+'/100' : '' %>
+        </option>
+        <% }) %>
+      </select>
+      <% if(!(clients||profils).length){ %>
+      <div style="margin-top:.5rem;font-size:.75rem;color:#F59E0B;"><i class="bi bi-info-circle"></i> Aucun client trouvé dans la base.</div>
+      <% } else { %>
+      <div style="margin-top:.4rem;font-size:.7rem;color:var(--muted);"><%= (clients||profils).length %> client(s) disponible(s)</div>
+      <% } %>
+    </div>
+    <!-- Infos profil -->
+    <div id="profilPreview" style="background:#060A12;border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:.75rem;font-size:.76rem;color:#64748B;display:flex;align-items:center;justify-content:center;">
+      <div style="text-align:center;"><i class="bi bi-person-circle" style="font-size:1.5rem;color:#1E3A5F;display:block;margin-bottom:.3rem;"></i>Sélectionnez un client</div>
+    </div>
+  </div>
+
+  <!-- Canal -->
+  <label class="nx-label">Canal de communication</label>
+  <div class="canal-tabs">
+    <button class="canal-tab email active" onclick="setCanal('Email',this)"><i class="bi bi-envelope-fill"></i> Email</button>
+    <button class="canal-tab whatsapp"     onclick="setCanal('WhatsApp',this)"><i class="bi bi-whatsapp"></i> WhatsApp</button>
+    <button class="canal-tab facebook"     onclick="setCanal('Facebook',this)"><i class="bi bi-facebook"></i> Facebook</button>
+  </div>
+
+  <!-- Ton -->
+  <label class="nx-label">Ton du message</label>
+  <div class="ton-sel">
+    <% ['commercial','amical','urgent','exclusif','fidélisation','réactivation'].forEach(t => { %>
+    <button class="ton-btn <%= t==='commercial'?'active':'' %>" onclick="setTon('<%= t %>',this)"><%= t.charAt(0).toUpperCase()+t.slice(1) %></button>
+    <% }) %>
+  </div>
+
+  <!-- Bouton générer -->
+  <button class="btn btn-primary" id="btnGenerer" onclick="genererMessage()" style="min-width:200px;">
+    <i class="bi bi-magic"></i>Générer le message personnalisé
+  </button>
+
+  <!-- Résultat -->
+  <div class="msg-result" id="msgResult">
+    <!-- Sujet -->
+    <div class="msg-box" id="boxSujet" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;">
+        <div class="msg-box-label"><i class="bi bi-envelope"></i> Ligne d'objet (Email)</div>
+        <button class="copy-btn" onclick="copyText('txtSujet')"><i class="bi bi-copy"></i> Copier</button>
+      </div>
+      <div class="msg-content" id="txtSujet"></div>
+    </div>
+
+    <!-- Message principal -->
+    <div class="msg-box">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;">
+        <div class="msg-box-label" id="msgLabel"><i class="bi bi-chat-text-fill"></i> Message généré</div>
+        <div style="display:flex;gap:.35rem;">
+          <button class="copy-btn" onclick="copyText('txtMessage')"><i class="bi bi-copy"></i> Copier</button>
+          <button class="copy-btn" onclick="downloadMsg()" style="color:#00C8FF;border-color:rgba(0,200,255,.2);"><i class="bi bi-download"></i></button>
+        </div>
+      </div>
+      <div class="msg-content" id="txtMessage"></div>
+    </div>
+
+    <!-- CTA + Promo -->
+    <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;margin-bottom:.75rem;">
+      <div>
+        <div class="msg-box-label"><i class="bi bi-cursor-fill"></i> Appel à l'action</div>
+        <div style="font-size:.85rem;color:#00C8FF;font-weight:700;" id="txtCta"></div>
+      </div>
+      <div>
+        <div class="msg-box-label"><i class="bi bi-ticket-perforated-fill"></i> Code promo suggéré</div>
+        <div class="promo-badge" id="txtPromo"></div>
+      </div>
+    </div>
+
+    <!-- Raison personnalisation -->
+    <div style="background:rgba(139,92,246,.05);border:1px solid rgba(139,92,246,.12);border-radius:10px;padding:.75rem 1rem;">
+      <div class="msg-box-label" style="color:#A5B4FC;"><i class="bi bi-robot"></i> Pourquoi ce message est personnalisé</div>
+      <div style="font-size:.8rem;color:#94A3B8;line-height:1.6;" id="txtRaison"></div>
+    </div>
+
+    <!-- Actions -->
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem;">
+      <button class="btn btn-success" onclick="sauvegarderCampagne()"><i class="bi bi-floppy-fill"></i>Sauvegarder comme campagne</button>
+      <button class="btn btn-ia"      onclick="genererMessage()"><i class="bi bi-arrow-clockwise"></i>Régénérer</button>
+      <button class="btn btn-ghost"   onclick="document.getElementById('msgResult').style.display='none'"><i class="bi bi-x-lg"></i>Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Profils IA existants -->
+<div class="card">
+  <div class="card-hd">
+    <div class="card-hd-title"><i class="bi bi-people-fill text-cyan"></i>Profils IA clients (<%= profils.length %>)</div>
+    <div style="display:flex;gap:.5rem;">
+      <button class="btn btn-ia btn-sm" onclick="lancerAnalyse(this)"><i class="bi bi-robot"></i>Analyser tous les clients</button>
+    </div>
+  </div>
+  <div class="tbl-wrap">
+  <table><thead><tr><th>Client</th><th>Engagement</th><th>Fidélité</th><th>Catégories préférées</th><th>Budget moyen</th><th>Actions</th></tr></thead>
+  <tbody>
+  <% profils.forEach(p => { %>
+  <tr>
+    <td>
+      <div style="display:flex;align-items:center;gap:.55rem;">
+        <div style="width:30px;height:30px;background:linear-gradient(135deg,#1D4ED8,#00C8FF);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#fff;flex-shrink:0;">
+          <%= (p.prenom||'?').charAt(0).toUpperCase()+(p.nom||'').charAt(0).toUpperCase() %>
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:.8rem;"><%= p.prenom %> <%= p.nom %></div>
+          <div style="font-size:.68rem;color:#64748B;"><%= p.email||'' %></div>
+        </div>
+      </div>
+    </td>
+    <td>
+      <div style="display:flex;align-items:center;gap:.5rem;">
+        <div style="width:60px;height:5px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden;">
+          <div style="width:<%= p.score_engagement||0 %>%;height:100%;background:linear-gradient(90deg,#1D4ED8,#00C8FF);border-radius:3px;"></div>
+        </div>
+        <span style="font-size:.75rem;font-weight:700;color:#00C8FF;"><%= p.score_engagement||0 %></span>
+      </div>
+    </td>
+    <td>
+      <div style="display:flex;align-items:center;gap:.5rem;">
+        <div style="width:60px;height:5px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden;">
+          <div style="width:<%= p.score_fidelite||0 %>%;height:100%;background:linear-gradient(90deg,#059669,#34D399);border-radius:3px;"></div>
+        </div>
+        <span style="font-size:.75rem;font-weight:700;color:#34D399;"><%= p.score_fidelite||0 %></span>
+      </div>
+    </td>
+    <td style="font-size:.73rem;">
+      <% try { const cats=JSON.parse(p.categories_preferees||'[]'); %>
+        <% cats.slice(0,3).forEach(c=>{ %><span class="badge b-ship" style="margin:.1rem;"><%= c %></span><% }) %>
+      <% } catch { %>—<% } %>
+    </td>
+    <td style="font-weight:700;font-size:.8rem;"><%= Math.round(p.panier_moyen||0).toLocaleString() %> HTG</td>
+    <td>
+      <div style="display:flex;gap:.35rem;flex-wrap:wrap;">
+        <button class="btn btn-cyan btn-sm"
+                onclick="analyserUnClient(<%= p.id_user %>,'<%= (p.prenom||'').replace(/'/g,"\\'") %>',this)"
+                title="Analyser ce client avec l'IA">
+          <i class="bi bi-robot"></i>Analyser
+        </button>
+        <button class="btn btn-ia btn-sm"
+                onclick="quickGenerate(<%= p.id_user %>)"
+                title="Générer message IA">
+          <i class="bi bi-magic"></i>Message
+        </button>
+      </div>
+    </td>
+  </tr>
+  <% }) %>
+  <% if(!profils.length){ %><tr><td colspan="6"><div class="empty-state"><i class="bi bi-people"></i>Aucun profil IA.<br><small>Lancez une analyse comportementale depuis Marketing IA.</small></div></td></tr><% } %>
+  </tbody></table>
+  </div>
+</div>
+
+<!-- Logs IA -->
+<% if(logs && logs.length){ %>
+<div class="card">
+  <div class="card-hd"><div class="card-hd-title"><i class="bi bi-journal-code text-cyan"></i>Journaux IA récents</div></div>
+  <div class="tbl-wrap"><table><thead><tr><th>Agent</th><th>Action</th><th>Statut</th><th>Date</th></tr></thead><tbody>
+  <% logs.forEach(l=>{ %>
+  <tr>
+    <td style="font-size:.75rem;font-weight:600;"><%= l.agent||'—' %></td>
+    <td style="font-size:.73rem;color:#64748B;"><%= l.action||'—' %></td>
+    <td><span class="badge <%= l.statut==='succès'?'b-ok':'b-cancel' %>"><%= l.statut||'—' %></span></td>
+    <td style="font-size:.7rem;color:#64748B;"><%= l.created_at?new Date(l.created_at).toLocaleString('fr-FR'):'—' %></td>
+  </tr>
+  <% }) %>
+  </tbody></table></div>
+</div>
+<% } %>
+
+</div></div>
+<script>
+function toggleSidebar(){const sb=document.getElementById('sidebar');sb.style.transform=sb.style.transform==='translateX(0px)'?'translateX(-100%)':'translateX(0px)';}
+if(window.innerWidth<1024)document.getElementById('sidebar').style.transform='translateX(-100%)';
+document.querySelectorAll('.flash').forEach(el=>setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),400);},4500));
+
+// ── État courant ──────────────────────────────────────────────
+let currentCanal = 'Email';
+let currentTon   = 'commercial';
+let currentUser  = null;
+let lastResult   = null;
+
+// ── Vérifier statut agents ───────────────────────────────────
+async function checkStatus() {
+  const dot = document.getElementById('serverDot');
+  const st  = document.getElementById('serverStatus');
+  const ms  = document.getElementById('modelStatus');
+  try {
+    const r = await fetch(BASE_URL + '/api/chat', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ message:'ping', session_id:'admin_check' })
+    });
+    const d = await r.json();
+    if (d.status === 'ok') {
+      dot.className = 'agent-dot dot-ok';
+      st.textContent = '✓ Groq connecté — llama-3.3-70b-versatile';
+      st.style.color = '#10B981';
+      ms.textContent = '✓ Clé API valide';
+      ms.style.color = '#10B981';
+      document.querySelectorAll('.agent-dot[id^="dot_"]').forEach(d => d.className = 'agent-dot dot-ok');
+    } else {
+      dot.className = 'agent-dot dot-warn';
+      st.textContent = '⚠ Mode démo — Configurez GROQ_API_KEY dans .env';
+      st.style.color = '#F59E0B';
+      ms.textContent = '⚠ Clé API manquante';
+    }
+  } catch {
+    dot.className = 'agent-dot dot-off';
+    st.textContent = '✗ Serveur inaccessible';
+    st.style.color = '#EF4444';
+  }
+}
+
+// ── Canal ────────────────────────────────────────────────────
+function setCanal(c, btn) {
+  currentCanal = c;
+  document.querySelectorAll('.canal-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ── Ton ──────────────────────────────────────────────────────
+function setTon(t, btn) {
+  currentTon = t;
+  document.querySelectorAll('.ton-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ── Charger profil ───────────────────────────────────────────
+function loadProfil(uid) {
+  const sel = document.getElementById('selectUser');
+  const opt = sel.options[sel.selectedIndex];
+  const preview = document.getElementById('profilPreview');
+
+  if (!uid) {
+    currentUser = null;
+    preview.innerHTML = '<div style="text-align:center;"><i class="bi bi-person-circle" style="font-size:1.5rem;color:#1E3A5F;display:block;margin-bottom:.3rem;"></i>Sélectionnez un client</div>';
+    return;
+  }
+
+  currentUser = {
+    id:         uid,
+    prenom:     opt.dataset.prenom,
+    nom:        opt.dataset.nom,
+    email:      opt.dataset.email,
+    engagement: opt.dataset.engagement,
+    fidelite:   opt.dataset.fidelite,
+    budget:     opt.dataset.budget,
+  };
+
+  let cats = [];
+  try { cats = JSON.parse(opt.dataset.cats || '[]'); } catch {}
+
+  preview.innerHTML = `
+    <div style="width:100%;">
+      <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.6rem;">
+        <div style="width:36px;height:36px;background:linear-gradient(135deg,#1D4ED8,#00C8FF);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:800;color:#fff;flex-shrink:0;">
+          ${currentUser.prenom.charAt(0).toUpperCase()}${currentUser.nom.charAt(0).toUpperCase()}
+        </div>
+        <div>
+          <div style="font-size:.83rem;font-weight:800;">${currentUser.prenom} ${currentUser.nom}</div>
+          <div style="font-size:.68rem;color:#64748B;">${currentUser.email}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem;">
+        <div style="background:#060A12;border-radius:6px;padding:.4rem .6rem;">
+          <div style="font-size:.6rem;color:#374151;text-transform:uppercase;font-weight:700;">Engagement</div>
+          <div style="font-size:.9rem;font-weight:800;color:#00C8FF;">${currentUser.engagement}/100</div>
+        </div>
+        <div style="background:#060A12;border-radius:6px;padding:.4rem .6rem;">
+          <div style="font-size:.6rem;color:#374151;text-transform:uppercase;font-weight:700;">Fidélité</div>
+          <div style="font-size:.9rem;font-weight:800;color:#34D399;">${currentUser.fidelite}/100</div>
+        </div>
+        <div style="background:#060A12;border-radius:6px;padding:.4rem .6rem;">
+          <div style="font-size:.6rem;color:#374151;text-transform:uppercase;font-weight:700;">Budget moyen</div>
+          <div style="font-size:.78rem;font-weight:700;">${currentUser.budget} HTG</div>
+        </div>
+        <div style="background:#060A12;border-radius:6px;padding:.4rem .6rem;">
+          <div style="font-size:.6rem;color:#374151;text-transform:uppercase;font-weight:700;">Intérêts</div>
+          <div style="font-size:.7rem;color:#A5B4FC;">${cats.slice(0,2).join(', ') || '—'}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── Générer message ──────────────────────────────────────────
+async function genererMessage() {
+  if (!currentUser) {
+    showToast('Sélectionnez un client d\'abord.', 'error');
+    return;
+  }
+  const btn = document.getElementById('btnGenerer');
+  const result = document.getElementById('msgResult');
+  btn.innerHTML = '<i class="bi bi-hourglass-split spin"></i> Génération en cours…';
+  btn.disabled = true;
+  result.style.display = 'none';
+
+  try {
+    const r = await fetch(BASE_URL + '/admin/api/message-ia', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id_user: currentUser.id,
+        canal:   currentCanal,
+        ton:     currentTon,
+      })
+    });
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+
+    lastResult = d;
+    afficherResultat(d);
+    showToast(`✓ Message généré pour ${d.user?.prenom} !`, 'success');
+  } catch(e) {
+    showToast('Erreur : ' + e.message, 'error');
+  } finally {
+    btn.innerHTML = '<i class="bi bi-magic"></i>Générer le message personnalisé';
+    btn.disabled = false;
+  }
+}
+
+// ── Afficher le résultat ─────────────────────────────────────
+function afficherResultat(d) {
+  const msg = d.message || {};
+  const result = document.getElementById('msgResult');
+
+  // Sujet (email seulement)
+  const boxSujet = document.getElementById('boxSujet');
+  if (d.canal === 'Email' && msg.sujet) {
+    document.getElementById('txtSujet').textContent = msg.sujet;
+    boxSujet.style.display = 'block';
+  } else {
+    boxSujet.style.display = 'none';
+  }
+
+  // Message principal
+  document.getElementById('txtMessage').textContent = msg.message || msg.contenu || JSON.stringify(msg, null, 2);
+  document.getElementById('msgLabel').innerHTML = `<i class="bi bi-${d.canal==='Email'?'envelope-fill':d.canal==='WhatsApp'?'whatsapp':'facebook'}-fill"></i> Message ${d.canal}`;
+
+  // CTA
+  document.getElementById('txtCta').textContent = msg.cta || '→ Voir nos offres';
+
+  // Promo
+  const promoEl = document.getElementById('txtPromo');
+  promoEl.innerHTML = `<i class="bi bi-ticket-perforated"></i>${msg.code_promo || 'NEXIO10'}`;
+
+  // Raison
+  document.getElementById('txtRaison').textContent = msg.raison_personnalisation || 'Message adapté au profil du client.';
+
+  result.style.display = 'block';
+  result.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+// ── Quick generate depuis tableau ────────────────────────────
+function quickGenerate(uid) {
+  const sel = document.getElementById('selectUser');
+  sel.value = uid;
+  loadProfil(uid);
+  genererMessage();
+  document.querySelector('.msg-gen').scrollIntoView({ behavior:'smooth' });
+}
+
+// ── Sauvegarder comme campagne ───────────────────────────────
+async function sauvegarderCampagne() {
+  if (!lastResult) return;
+  const msg = lastResult.message || {};
+  const nom = `Message ${lastResult.canal} — ${currentUser?.prenom||'Client'} — ${new Date().toLocaleDateString('fr-FR')}`;
+  try {
+    const r = await fetch(BASE_URL + '/admin/campagnes', {
+      method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({
+        nom, canal: lastResult.canal,
+        contenu: msg.message || '',
+        statut: 'Brouillon',
+      })
+    });
+    showToast('✓ Campagne sauvegardée !', 'success');
+  } catch {
+    showToast('Erreur lors de la sauvegarde.', 'error');
+  }
+}
+
+// ── Copier texte ─────────────────────────────────────────────
+async function copyText(id) {
+  const el = document.getElementById(id);
+  await navigator.clipboard.writeText(el.textContent);
+  showToast('✓ Copié !', 'success');
+}
+
+// ── Télécharger ──────────────────────────────────────────────
+function downloadMsg() {
+  if (!lastResult) return;
+  const msg = lastResult.message || {};
+  const content = [
+    `NEXIO S.A. — Message ${lastResult.canal}`,
+    `Client : ${currentUser?.prenom} ${currentUser?.nom}`,
+    `Date : ${new Date().toLocaleDateString('fr-FR')}`,
+    `Ton : ${currentTon}`,
+    '─'.repeat(50),
+    msg.sujet ? `Sujet : ${msg.sujet}\n` : '',
+    msg.message || '',
+    '',
+    `CTA : ${msg.cta || ''}`,
+    `Code promo : ${msg.code_promo || ''}`,
+    '',
+    `Personnalisation : ${msg.raison_personnalisation || ''}`,
+  ].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(content);
+  a.download = `nexio_message_${currentUser?.prenom||'client'}_${Date.now()}.txt`;
+  a.click();
+}
+
+// ── Analyser UN client spécifique ────────────────────────────
+async function analyserUnClient(idUser, prenom, btn) {
+  if (!idUser) { showToast('Sélectionnez un client.', 'error'); return; }
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<i class="bi bi-hourglass-split spin"></i>';
+  btn.disabled = true;
+  showToast(`Analyse IA de ${prenom} en cours…`, 'info');
+  try {
+    const r = await fetch(BASE_URL + '/admin/api/ia', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'analyser_user', id_user: idUser })
+    });
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    showToast(`✓ ${prenom} analysé(e) ! Score engagement: ${d.data?.score_engagement||0}/100`, 'success');
+    setTimeout(() => location.reload(), 2000);
+  } catch(e) {
+    showToast('Erreur : ' + e.message, 'error');
+  }
+  btn.innerHTML = orig; btn.disabled = false;
+}
+
+// ── Analyser TOUS les clients ─────────────────────────────────
+async function lancerAnalyse(btn) {
+  const el = btn || document.querySelector('[onclick="lancerAnalyse(this)"]');
+  const orig = el ? el.innerHTML : '';
+  if (el) { el.innerHTML = '<i class="bi bi-hourglass-split spin"></i> Analyse en cours…'; el.disabled = true; }
+  showToast('Analyse IA de tous les clients en cours… (peut prendre quelques secondes)', 'info');
+  try {
+    const r = await fetch(BASE_URL + '/admin/api/ia', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'analyser_tous' })
+    });
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    showToast(d.msg || `✓ ${d.nb_ok||0} client(s) analysé(s) !`, 'success');
+    setTimeout(() => location.reload(), 2500);
+  } catch(e) {
+    showToast('Erreur : ' + e.message, 'error');
+  }
+  if (el) { el.innerHTML = orig; el.disabled = false; }
+}
+
+// ── Toast ────────────────────────────────────────────────────
+function showToast(msg, type='success') {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:70px;right:1.2rem;z-index:9999;padding:.75rem 1.1rem;border-radius:10px;font-size:.83rem;font-weight:700;display:flex;align-items:center;gap:.5rem;box-shadow:0 8px 24px rgba(0,0,0,.4);max-width:380px;animation:slideDown .3s ease;';
+  t.style.cssText += type==='success'
+    ? 'background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.25);color:#34D399;'
+    : 'background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);color:#FCA5A5;';
+  t.innerHTML = `<i class="bi bi-${type==='success'?'check-circle':'exclamation-circle'}-fill"></i>${msg}<button onclick="this.parentNode.remove()" style="margin-left:auto;background:none;border:none;color:inherit;cursor:pointer;font-size:1rem;">×</button>`;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.transition='opacity .4s'; t.style.opacity='0'; setTimeout(()=>t.remove(),400); }, 5000);
+}
+
+// Init
+checkStatus();
+</script>
+</body></html>

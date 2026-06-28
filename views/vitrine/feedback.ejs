@@ -1,0 +1,44 @@
+<%- include('../partials/head') %>
+<%- include('../partials/navbar') %>
+<div class="nx-section">
+  <div class="text-center mb-5" data-animate><h1 style="font-size:1.8rem;">Votre <span style="color:var(--cyan);">avis compte</span></h1></div>
+  <div class="row g-4">
+    <div class="col-12 col-lg-5" data-animate>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.8rem;">
+        <h3 style="font-size:1rem;margin-bottom:1.2rem;"><i class="bi bi-chat-square-heart me-2" style="color:var(--cyan);"></i>Laisser un feedback</h3>
+        <% if(flash.success&&flash.success.length){ %><div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);border-radius:var(--radius);padding:.8rem;margin-bottom:1rem;color:var(--success);font-size:.85rem;font-weight:600;"><%= flash.success[0] %></div><% } %>
+        <form method="POST" action="/feedback">
+          <% if(!isLoggedIn){ %>
+          <div class="row g-2 mb-2">
+            <div class="col-6"><label class="nx-label">Nom *</label><input type="text" name="nom" class="nx-input" required></div>
+            <div class="col-6"><label class="nx-label">Email</label><input type="email" name="email" class="nx-input"></div>
+          </div>
+          <% } %>
+          <label class="nx-label">Note *</label>
+          <div style="display:flex;gap:.5rem;margin-bottom:.85rem;" id="starRow">
+            <% for(let s=1;s<=5;s++){%><label style="cursor:pointer;font-size:1.8rem;color:<%= s<=5?'var(--warn)':'rgba(245,158,11,.3)' %>;transition:color .15s;"><input type="radio" name="note" value="<%= s %>" style="display:none;" <%= s===5?'checked':'' %>>★</label><%}%>
+          </div>
+          <label class="nx-label">Type</label>
+          <select name="type_feedback" class="nx-input"><% ['Expérience','Problème','Suggestion','Commentaire'].forEach(t=>{%><option value="<%= t %>"><%= t %></option><%})%></select>
+          <label class="nx-label">Commentaire *</label>
+          <textarea name="commentaire" class="nx-input" rows="4" required placeholder="Partagez votre expérience..."></textarea>
+          <button type="submit" class="btn-nx-primary w-100"><i class="bi bi-send-fill"></i>Envoyer</button>
+        </form>
+      </div>
+    </div>
+    <div class="col-12 col-lg-7" data-animate style="animation-delay:.1s;">
+      <h3 style="font-size:1rem;margin-bottom:1.2rem;"><i class="bi bi-stars me-2" style="color:var(--warn);"></i>Avis clients (<%= feedbacks.length %>)</h3>
+      <div class="row g-3">
+        <% feedbacks.forEach((fb,i) => { %>
+        <div class="col-12 col-sm-6"><div class="tcard">
+          <div class="tcard-stars"><% for(let s=1;s<=5;s++){%><i class="bi bi-star<%=s<=fb.note?'-fill':''%> <%=s<=fb.note?'star-full':'star-empty'%>"></i><%}%></div>
+          <div class="tcard-text">"<%= fb.commentaire.substring(0,120) %><%= fb.commentaire.length>120?'…':'' %>"</div>
+          <div class="tcard-author"><div class="tcard-avatar"><%= (fb.prenom||fb.nom||'N').charAt(0).toUpperCase() %></div><div><div class="tcard-name"><%= fb.prenom||'Client' %></div><div style="font-size:.68rem;color:var(--muted);"><%= new Date(fb.date_feedback).toLocaleDateString('fr-FR') %></div></div></div>
+        </div></div>
+        <% }) %>
+        <% if(!feedbacks.length){%><div class="col-12"><p style="color:var(--muted);text-align:center;padding:2rem;">Soyez le premier à laisser un avis !</p></div><%}%>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('../partials/footer') %>

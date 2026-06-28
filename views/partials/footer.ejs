@@ -1,0 +1,185 @@
+<footer class="nx-footer">
+  <div class="nx-footer-grid">
+    <div class="nx-footer-brand">
+      <div class="nx-logo" style="font-size:1.3rem;color:#fff;">
+        <i class="bi bi-cpu-fill" style="color:#60A5FA;"></i>Nexio<span style="color:#F59E0B;">.</span>ht
+      </div>
+      <p>Votre partenaire technologique de confiance à Port-au-Prince. Matériel certifié, prix compétitifs, livraison rapide.</p>
+      <div class="socials">
+        <a href="#" class="social-btn"><i class="bi bi-facebook"></i></a>
+        <a href="#" class="social-btn"><i class="bi bi-instagram"></i></a>
+        <a href="#" class="social-btn"><i class="bi bi-whatsapp"></i></a>
+        <a href="#" class="social-btn"><i class="bi bi-twitter-x"></i></a>
+      </div>
+    </div>
+    <div>
+      <h4>Catalogue</h4>
+      <ul>
+        <li><a href="/?cat=1">Ordinateurs</a></li>
+        <li><a href="/?cat=2">Réseau</a></li>
+        <li><a href="/?cat=3">Stockage</a></li>
+        <li><a href="/?cat=4">Gaming</a></li>
+        <li><a href="/?cat=5">Périphériques</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Mon compte</h4>
+      <ul>
+        <li><a href="/auth/login">Connexion</a></li>
+        <li><a href="/auth/register">S'inscrire</a></li>
+        <li><a href="/panier">Mon panier</a></li>
+        <li><a href="/wishlist">Mes favoris</a></li>
+        <li><a href="/compte">Mon profil</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Nexio S.A.</h4>
+      <ul>
+        <li><a href="/about">À propos</a></li>
+        <li><a href="/contact">Contact</a></li>
+        <li><a href="/feedback">Avis clients</a></li>
+        <li><a href="#">Livraison</a></li>
+        <li><a href="#">Garantie</a></li>
+      </ul>
+      <div style="margin-top:1.1rem;font-size:.8rem;color:rgba(255,255,255,.5);">
+        <div><i class="bi bi-geo-alt-fill" style="color:#60A5FA;margin-right:.35rem;"></i>Delmas, Port-au-Prince</div>
+        <div style="margin-top:.35rem;"><i class="bi bi-telephone-fill" style="color:#60A5FA;margin-right:.35rem;"></i>4810-8541</div>
+        <div style="margin-top:.35rem;"><i class="bi bi-clock-fill" style="color:#60A5FA;margin-right:.35rem;"></i>Lun–Sam 8h–18h</div>
+      </div>
+    </div>
+  </div>
+  <div class="nx-footer-bottom">
+    <span>© 2025 Nexio S.A. — Tous droits réservés</span>
+    <span>Développé avec <i class="bi bi-heart-fill" style="color:#EF4444;font-size:.7rem;"></i> à Port-au-Prince</span>
+  </div>
+</footer>
+
+<!-- Chatbot NEX -->
+<button class="nex-toggle" id="nexToggle" aria-label="Ouvrir le chat NEX">
+  <i class="bi bi-robot"></i>
+  <span class="nex-pulse"></span>
+</button>
+<div class="nex-bubble" id="nexBubble" role="dialog" aria-label="Chat NEX">
+  <div class="nex-head">
+    <div class="nex-head-info">
+      <div class="nex-avatar">🤖</div>
+      <div>
+        <div class="nex-name">NEX — Assistant IA</div>
+        <div class="nex-status"><span class="nex-online"></span>En ligne · Propulsé par Groq</div>
+      </div>
+    </div>
+    <button class="nex-close" id="nexClose" aria-label="Fermer"><i class="bi bi-x-lg"></i></button>
+  </div>
+  <div class="nex-messages" id="nexMessages">
+    <div class="msg msg-nex">👋 Bonjour ! Je suis <strong>NEX</strong>, votre assistant Nexio.<br>Je peux vous conseiller des produits, suivre vos commandes ou répondre à vos questions.</div>
+  </div>
+  <form class="nex-form" id="nexForm">
+    <input type="text" class="nex-input" id="nexInput" placeholder="Posez votre question…" autocomplete="off">
+    <button type="submit" class="nex-send"><i class="bi bi-send-fill"></i></button>
+  </form>
+</div>
+
+<!-- Back to top -->
+<button id="backTop" aria-label="Retour en haut"><i class="bi bi-arrow-up"></i></button>
+
+<!-- Progress bar -->
+<div id="progress-bar"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* ── NAV MOBILE ────────────────────────────────────────── */
+const navToggler = document.getElementById('navToggler');
+const navMenu    = document.getElementById('navMobileMenu');
+if(navToggler && navMenu) {
+  navToggler.addEventListener('click', () => {
+    navMenu.classList.toggle('open');
+    const icon = navToggler.querySelector('i');
+    icon.className = navMenu.classList.contains('open') ? 'bi bi-x-lg' : 'bi bi-list';
+  });
+}
+
+/* ── CHATBOT NEX ────────────────────────────────────────── */
+const nexToggle  = document.getElementById('nexToggle');
+const nexBubble  = document.getElementById('nexBubble');
+const nexClose   = document.getElementById('nexClose');
+const nexForm    = document.getElementById('nexForm');
+const nexInput   = document.getElementById('nexInput');
+const nexMessages= document.getElementById('nexMessages');
+let nexOpen = false;
+
+function toggleNex() {
+  nexOpen = !nexOpen;
+  nexBubble.classList.toggle('open', nexOpen);
+  if (nexOpen) { nexBubble.style.display='flex'; setTimeout(()=>nexInput.focus(),200); }
+  nexToggle.innerHTML = nexOpen
+    ? '<i class="bi bi-x-lg"></i>'
+    : '<i class="bi bi-robot"></i><span class="nex-pulse"></span>';
+}
+
+nexToggle.addEventListener('click', toggleNex);
+nexClose.addEventListener('click', toggleNex);
+
+function addMsg(text, role='nex') {
+  const d = document.createElement('div');
+  d.className = `msg msg-${role}`;
+  d.innerHTML = text;
+  nexMessages.appendChild(d);
+  nexMessages.scrollTop = nexMessages.scrollHeight;
+  return d;
+}
+
+function showTyping() {
+  const d = document.createElement('div');
+  d.className = 'msg-typing msg-nex';
+  d.innerHTML = '<div class="dot-t"></div><div class="dot-t"></div><div class="dot-t"></div>';
+  d.id = 'nexTyping';
+  nexMessages.appendChild(d);
+  nexMessages.scrollTop = nexMessages.scrollHeight;
+}
+
+nexForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = nexInput.value.trim();
+  if (!msg) return;
+  addMsg(msg, 'user');
+  nexInput.value = '';
+  showTyping();
+  try {
+    const r = await fetch(BASE_URL + '/api/chat', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ message:msg, session_id: (sessionStorage.getItem('nex_session')||crypto.randomUUID()) })
+    });
+    const data = await r.json();
+    document.getElementById('nexTyping')?.remove();
+    addMsg(data.reply || 'Désolé, je n\'ai pas pu traiter votre demande.', 'nex');
+    sessionStorage.setItem('nex_session', data.session_id || 'session');
+  } catch {
+    document.getElementById('nexTyping')?.remove();
+    addMsg('⚠️ Service temporairement indisponible. Appelez-nous au <strong>4810-8541</strong>.', 'nex');
+  }
+});
+
+/* ── BACK TO TOP ────────────────────────────────────────── */
+const backTop = document.getElementById('backTop');
+window.addEventListener('scroll', () => {
+  backTop?.classList.toggle('show', window.scrollY > 400);
+  // Progress bar
+  const pb = document.getElementById('progress-bar');
+  if(pb) {
+    const pct = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+    pb.style.width = Math.min(pct, 100) + '%';
+  }
+}, { passive: true });
+backTop?.addEventListener('click', () => window.scrollTo({ top:0, behavior:'smooth' }));
+
+/* ── ANIMATIONS SCROLL ──────────────────────────────────── */
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('animated'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('[data-animate]').forEach(el => observer.observe(el));
+
+/* ── FLASH AUTO-DISMISS ─────────────────────────────────── */
+document.querySelectorAll('.nx-flash').forEach(el => {
+  setTimeout(() => { el.style.transition='opacity .4s'; el.style.opacity='0'; setTimeout(()=>el.remove(),400); }, 4500);
+});
+</script>

@@ -1,0 +1,190 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title><%= title %> — Nexio Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<script>const BASE_URL='<%- BASE_URL %>';</script>
+<%- include('./admin_styles') %>
+<style>
+.mkt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.4rem;}
+.mkt-card{background:linear-gradient(135deg,#0D1117,#060A12);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:1.4rem;text-align:center;transition:transform .2s,border-color .2s;}
+.mkt-card:hover{transform:translateY(-3px);border-color:rgba(0,200,255,.15);}
+.mkt-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin:0 auto .75rem;}
+.mkt-val{font-size:2rem;font-weight:900;letter-spacing:-1px;margin-bottom:.2rem;}
+.mkt-lbl{font-size:.72rem;color:#64748B;font-weight:600;}
+.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.4rem;}
+.action-btn{background:#0D1117;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:1.1rem;display:flex;flex-direction:column;align-items:flex-start;gap:.5rem;transition:all .2s;cursor:pointer;text-align:left;}
+.action-btn:hover{border-color:rgba(0,200,255,.2);background:rgba(0,200,255,.02);}
+.action-btn i{font-size:1.3rem;margin-bottom:.15rem;}
+.action-btn .ab-title{font-size:.83rem;font-weight:800;}
+.action-btn .ab-desc{font-size:.72rem;color:#64748B;}
+.canal-btn{display:flex;align-items:center;gap:.4rem;padding:.45rem .9rem;border-radius:8px;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .18s;border:1px solid;}
+.canal-email{background:rgba(29,78,216,.1);border-color:rgba(29,78,216,.25);color:#60A5FA;}
+.canal-wa{background:rgba(37,211,102,.08);border-color:rgba(37,211,102,.2);color:#25D366;}
+.canal-fb{background:rgba(24,119,242,.08);border-color:rgba(24,119,242,.2);color:#1877F2;}
+@media(max-width:768px){.mkt-grid,.action-grid{grid-template-columns:1fr}}
+</style>
+</head><body>
+<%- include('./admin_sidebar', { page: page, stats: stats }) %>
+<div class="main" id="mainContent">
+<%- include('./admin_topbar', { title: title }) %>
+<div class="content">
+<%- include('./admin_flash') %>
+
+<!-- KPIs Marketing -->
+<div class="mkt-grid">
+  <div class="mkt-card">
+    <div class="mkt-icon" style="background:rgba(0,200,255,.08);color:#00C8FF;"><i class="bi bi-people-fill"></i></div>
+    <div class="mkt-val text-cyan"><%= stats_mkt.total_clients||0 %></div>
+    <div class="mkt-lbl">Clients analysables</div>
+  </div>
+  <div class="mkt-card">
+    <div class="mkt-icon" style="background:rgba(139,92,246,.08);color:#A5B4FC;"><i class="bi bi-megaphone-fill"></i></div>
+    <div class="mkt-val" style="color:#A5B4FC;"><%= stats_mkt.camp_actives||0 %></div>
+    <div class="mkt-lbl">Campagnes actives</div>
+  </div>
+  <div class="mkt-card">
+    <div class="mkt-icon" style="background:rgba(16,185,129,.08);color:#10B981;"><i class="bi bi-send-check-fill"></i></div>
+    <div class="mkt-val" style="color:#10B981;"><%= stats_mkt.envoyes||0 %></div>
+    <div class="mkt-lbl">Campagnes envoyées</div>
+  </div>
+</div>
+
+<!-- Actions IA -->
+<div class="card" style="margin-bottom:1.1rem;">
+  <div class="card-hd"><div class="card-hd-title"><i class="bi bi-robot text-cyan"></i>Actions IA rapides</div></div>
+  <div class="card-body">
+    <div class="action-grid">
+      <button class="action-btn" onclick="lancerIA('analyser_tous')">
+        <i class="bi bi-people-fill" style="color:#00C8FF;"></i>
+        <div class="ab-title">Analyser tous les clients</div>
+        <div class="ab-desc">Crée un profil IA individuel pour chaque client</div>
+      </button>
+      <button class="action-btn" onclick="lancerIA('segments')">
+        <i class="bi bi-diagram-3-fill" style="color:#A5B4FC;"></i>
+        <div class="ab-title">Générer par segments</div>
+        <div class="ab-desc">6 campagnes automatiques (gamers, entreprises, étudiants…)</div>
+      </button>
+      <button class="action-btn" onclick="lancerIA('rapport_ventes')">
+        <i class="bi bi-bar-chart-fill" style="color:#34D399;"></i>
+        <div class="ab-title">Rapport IA ventes</div>
+        <div class="ab-desc">Analyse IA des performances commerciales des 30 derniers jours</div>
+      </button>
+      <button class="action-btn" onclick="lancerIA('stocks')">
+        <i class="bi bi-archive-fill" style="color:#F59E0B;"></i>
+        <div class="ab-title">Alertes stock intelligentes</div>
+        <div class="ab-desc">Recommandations de réassort basées sur les tendances</div>
+      </button>
+    </div>
+    <div id="iaResult" style="display:none;background:#060A12;border:1px solid rgba(0,200,255,.15);border-radius:10px;padding:1rem;font-size:.8rem;color:#CBD5E1;line-height:1.7;margin-top:.5rem;white-space:pre-wrap;"></div>
+  </div>
+</div>
+
+<!-- Campagnes existantes -->
+<div class="card">
+  <div class="card-hd">
+    <div class="card-hd-title"><i class="bi bi-megaphone-fill" style="color:#A5B4FC;"></i>Campagnes (<%= campagnes.length %>)</div>
+    <a href="/admin/campagnes" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle-fill"></i>Nouvelle campagne</a>
+  </div>
+  <div class="tbl-wrap"><table><thead><tr><th>Campagne</th><th>Canal</th><th>Statut</th><th>Date</th><th>Actions</th></tr></thead><tbody>
+  <% campagnes.forEach(c=>{ %>
+  <tr>
+    <td>
+      <div style="font-weight:700;"><%= c.nom.substring(0,40) %></div>
+      <% if(c.contenu){ %><div style="font-size:.7rem;color:#64748B;margin-top:.15rem;"><%= c.contenu.substring(0,50) %>…</div><% } %>
+    </td>
+    <td><span class="badge b-ship"><%= c.canal||'Email' %></span></td>
+    <td>
+      <% const sm={'Brouillon':'b-warn','En cours':'b-ship','Envoyée':'b-ok','Annulée':'b-cancel','Planifiée':'b-purple','Terminée':'b-ok'}; %>
+      <span class="badge <%= sm[c.statut]||'b-wait' %>"><%= c.statut||'Brouillon' %></span>
+    </td>
+    <td class="text-muted" style="font-size:.73rem;"><%= c.date_envoi?new Date(c.date_envoi).toLocaleDateString('fr-FR'):'—' %></td>
+    <td>
+      <div style="display:flex;gap:.35rem;flex-wrap:wrap;">
+        <button class="canal-btn canal-email" onclick="envoyerCampagne(<%= c.id_campagne %>,'Email',this)" title="Envoyer Email"><i class="bi bi-envelope-fill"></i></button>
+        <button class="canal-btn canal-wa"    onclick="envoyerCampagne(<%= c.id_campagne %>,'WhatsApp',this)" title="WhatsApp"><i class="bi bi-whatsapp"></i></button>
+        <button class="canal-btn canal-fb"    onclick="envoyerCampagne(<%= c.id_campagne %>,'Facebook',this)" title="Facebook"><i class="bi bi-facebook"></i></button>
+        <button class="btn btn-ia btn-sm" onclick="genererContenu(<%= c.id_campagne %>,this)"><i class="bi bi-robot"></i>IA</button>
+        <a href="/admin/campagnes?edit=<%= c.id_campagne %>" class="btn btn-warn btn-sm"><i class="bi bi-pencil-fill"></i></a>
+      </div>
+    </td>
+  </tr>
+  <% }) %>
+  <% if(!campagnes.length){ %><tr><td colspan="5"><div class="empty-state"><i class="bi bi-megaphone"></i>Aucune campagne. <a href="/admin/campagnes" style="color:#00C8FF;">Créez-en une →</a></div></td></tr><% } %>
+  </tbody></table></div>
+</div>
+
+</div></div>
+<script>
+function toggleSidebar(){const sb=document.getElementById('sidebar');sb.style.transform=sb.style.transform==='translateX(0px)'?'translateX(-100%)':'translateX(0px)';}
+if(window.innerWidth<1024)document.getElementById('sidebar').style.transform='translateX(-100%)';
+document.querySelectorAll('.flash').forEach(el=>setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),400);},4500));
+
+function showToast(msg,type='success'){
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;top:70px;right:1.2rem;z-index:9999;padding:.75rem 1.1rem;border-radius:10px;font-size:.83rem;font-weight:700;display:flex;align-items:center;gap:.5rem;box-shadow:0 8px 24px rgba(0,0,0,.4);max-width:360px;animation:slideDown .3s ease;';
+  t.style.cssText+=type==='success'?'background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.25);color:#34D399;':'background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);color:#FCA5A5;';
+  t.innerHTML=`<i class="bi bi-${type==='success'?'check-circle':'exclamation-circle'}-fill"></i>${msg}<button onclick="this.parentNode.remove()" style="margin-left:auto;background:none;border:none;color:inherit;cursor:pointer;">×</button>`;
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.transition='opacity .4s';t.style.opacity='0';setTimeout(()=>t.remove(),400);},5000);
+}
+
+async function lancerIA(action) {
+  const res = document.getElementById('iaResult');
+  res.style.display = 'block';
+  res.innerHTML = '<i class="bi bi-hourglass-split" style="animation:spin .7s linear infinite;margin-right:.5rem;"></i>Analyse IA en cours…';
+  try {
+    const r = await fetch(BASE_URL+'/admin/api/ia', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action, jours:30 })
+    });
+    const d = await r.json();
+    if (d.error) {
+      res.innerHTML = `<span style="color:#FCA5A5;">❌ Erreur : ${d.error}</span>`;
+      return;
+    }
+    // Afficher le résultat selon le type d'action
+    let txt = '';
+    if (action === 'analyser_tous') {
+      txt = d.msg || `✓ ${d.nb_ok||0} client(s) analysé(s) avec succès.`;
+      if (d.resultats) {
+        txt += '\n\n' + d.resultats.slice(0,10).map(r => `${r.statut==='ok'?'✓':'✗'} ${r.nom}`).join('\n');
+        if (d.resultats.length > 10) txt += `\n... et ${d.resultats.length-10} autres`;
+      }
+      showToast(d.msg||'Analyse terminée !', 'success');
+    } else {
+      txt = d.analyse_ia || d.rapport_ia || d.msg || JSON.stringify(d, null, 2);
+      showToast('Analyse IA terminée !', 'success');
+    }
+    res.style.whiteSpace = 'pre-wrap';
+    res.textContent = typeof txt === 'string' ? txt : JSON.stringify(txt, null, 2);
+  } catch(e) {
+    res.innerHTML = `<span style="color:#FCA5A5;">❌ Serveur IA non disponible. Vérifiez GROQ_API_KEY dans .env<br>${e.message}</span>`;
+  }
+}
+
+async function genererContenu(id, btn) {
+  if(!confirm('Générer le contenu de cette campagne avec NEX IA ?')) return;
+  const orig=btn.innerHTML; btn.innerHTML='<i class="bi bi-hourglass-split"></i>'; btn.disabled=true;
+  try {
+    const r=await fetch(BASE_URL+'/admin/api/ia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'generer_campagne',id_campagne:id})});
+    const d=await r.json();
+    if(d.error) throw new Error(d.error);
+    showToast('✓ Contenu généré par NEX IA !','success');
+    btn.innerHTML='<i class="bi bi-check-lg"></i>OK'; btn.style.color='#10B981';
+    setTimeout(()=>{btn.innerHTML=orig;btn.style.color='';btn.disabled=false;},3000);
+  } catch(e) { btn.innerHTML=orig; btn.disabled=false; showToast('Erreur : '+e.message,'error'); }
+}
+
+async function envoyerCampagne(id, canal, btn) {
+  if(!confirm(`Envoyer sur ${canal} ?`)) return;
+  const orig=btn.innerHTML; btn.innerHTML='<i class="bi bi-hourglass-split"></i>'; btn.disabled=true;
+  try {
+    const r=await fetch(BASE_URL+'/admin/api/ia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'envoyer_campagne',id_campagne:id,canal})});
+    const d=await r.json();
+    if(d.error) throw new Error(d.error);
+    showToast(`✓ ${d.envoyes||0}/${d.destinataires||0} messages envoyés sur ${canal} !`,'success');
+  } catch(e) { showToast('Erreur : '+e.message,'error'); }
+  btn.innerHTML=orig; btn.disabled=false;
+}
+</script>
+</body></html>

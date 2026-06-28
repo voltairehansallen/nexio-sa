@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title><%= title %> — Nexio Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<script>const BASE_URL='<%- BASE_URL %>';</script>
+<%- include('./admin_styles') %>
+<style>
+.camp-tabs{display:flex;gap:.35rem;margin-bottom:1.3rem;border-bottom:1px solid var(--border);padding-bottom:.85rem;flex-wrap:wrap;}
+.camp-tab{padding:.42rem 1rem;border-radius:8px;font-size:.8rem;font-weight:700;cursor:pointer;border:1px solid var(--border2);background:none;color:var(--muted);transition:all var(--tr);}
+.camp-tab.active{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.3);color:var(--cyan);}
+.camp-tab:hover:not(.active){background:rgba(255,255,255,.05);color:var(--text2);}
+.target-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:.6rem;max-height:250px;overflow-y:auto;background:#0D1117;border:1px solid var(--border2);border-radius:var(--radius);padding:.65rem;scrollbar-width:thin;}
+.client-card{border:1.5px solid var(--border2);border-radius:10px;padding:.65rem .8rem;cursor:pointer;transition:all var(--tr);background:var(--card2);display:flex;flex-direction:column;gap:.22rem;}
+.client-card:hover{border-color:rgba(56,189,248,.3);background:rgba(56,189,248,.04);}
+.client-card.selected{border-color:var(--cyan);background:rgba(56,189,248,.08);}
+.client-card.selected .cc-check{display:flex;}
+.cc-check{display:none;width:18px;height:18px;border-radius:50%;background:var(--cyan);color:#000;font-size:.6rem;font-weight:900;align-items:center;justify-content:center;float:right;flex-shrink:0;}
+.cc-name{font-size:.78rem;font-weight:700;}
+.cc-email{font-size:.67rem;color:var(--muted);}
+.cc-pills{display:flex;gap:.3rem;margin-top:.2rem;flex-wrap:wrap;}
+.cc-pill{font-size:.6rem;font-weight:700;padding:.1rem .38rem;border-radius:4px;background:rgba(56,189,248,.1);color:var(--cyan);}
+.canal-pills{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem;}
+.canal-pill{padding:.38rem .9rem;border-radius:99px;font-size:.76rem;font-weight:700;cursor:pointer;border:1.5px solid var(--border2);color:var(--muted);transition:all var(--tr);display:flex;align-items:center;gap:.35rem;background:none;}
+.canal-pill:hover{border-color:rgba(255,255,255,.2);color:var(--text2);}
+.canal-pill.active[data-canal="Email"]{border-color:#3B82F6;color:#60A5FA;background:rgba(59,130,246,.1);}
+.canal-pill.active[data-canal="WhatsApp"]{border-color:#25D366;color:#25D366;background:rgba(37,211,102,.08);}
+.canal-pill.active[data-canal="Facebook"]{border-color:#1877F2;color:#60A5FA;background:rgba(24,119,242,.08);}
+.canal-pill.active[data-canal="Multi-canal"]{border-color:var(--cyan);color:var(--cyan);background:rgba(56,189,248,.08);}
+.ia-result{display:none;background:linear-gradient(135deg,#0A1020,#0D1530);border:1px solid rgba(56,189,248,.2);border-radius:var(--radius-lg);padding:1.3rem;margin-top:1rem;}
+.ia-result.open{display:block;animation:slideDown .3s ease;}
+.ia-sec-lbl{font-size:.62rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem;display:flex;align-items:center;gap:.35rem;}
+.ia-box{background:#060A14;border:1px solid rgba(255,255,255,.06);border-radius:9px;padding:.8rem 1rem;font-size:.82rem;color:var(--text2);line-height:1.7;white-space:pre-wrap;position:relative;margin-bottom:.85rem;}
+.copy-btn{position:absolute;top:.5rem;right:.5rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--muted);padding:.2rem .55rem;border-radius:6px;font-size:.68rem;cursor:pointer;transition:all var(--tr);}
+.copy-btn:hover{background:rgba(56,189,248,.1);color:var(--cyan);}
+.promo-code{display:inline-flex;align-items:center;gap:.5rem;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:var(--amber);padding:.35rem .85rem;border-radius:7px;font-weight:800;font-size:.85rem;letter-spacing:.05em;}
+.camp-row{display:grid;grid-template-columns:1fr auto auto;gap:.75rem;align-items:center;padding:.85rem 1.2rem;border-bottom:1px solid rgba(255,255,255,.03);transition:background var(--tr);}
+.camp-row:last-child{border-bottom:none;}
+.camp-row:hover{background:rgba(255,255,255,.015);}
+.camp-nom{font-size:.85rem;font-weight:700;margin-bottom:.18rem;}
+.camp-desc{font-size:.71rem;color:var(--muted);max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.camp-meta{display:flex;gap:.4rem;margin-top:.28rem;flex-wrap:wrap;}
+.camp-actions{display:flex;gap:.35rem;flex-wrap:wrap;justify-content:flex-end;}
+.seg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.85rem;}
+.seg-card{background:var(--card2);border:1px solid var(--border2);border-radius:var(--radius);padding:1rem;}
+.toast-c{position:fixed;top:68px;right:1.2rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem;}
+.toast{padding:.72rem 1.1rem;border-radius:10px;font-size:.82rem;font-weight:700;display:flex;align-items:center;gap:.5rem;box-shadow:var(--shadow-lg);max-width:360px;animation:slideDown .3s cubic-bezier(.34,1.56,.64,1);}
+.t-success{background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.25);color:#34D399;}
+.t-error{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);color:#FCA5A5;}
+.t-info{background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);color:var(--cyan);}
+.spin{animation:spinA .7s linear infinite;}
+@keyframes spinA{to{transform:rotate(360deg)}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<%- include('./admin_sidebar', { page: 'campagnes', stats: stats }) %>
+<div class="main" id="mainContent">
+<%- include('./admin_topbar', { title: 'Campagnes IA' }) %>
+<div class="content">
+<%- include('./admin_flash') %>
+<div class="toast-c" id="tc"></div>
+
+<!-- ONGLETS -->
+<div class="camp-tabs">
+  <button class="camp-tab active" onclick="showTab('creer',this)"><i class="bi bi-plus-circle-fill"></i> Créer avec IA</button>
+  <button class="camp-tab" onclick="showTab('liste',this)"><i class="bi bi-list-ul"></i> Liste (<%= total %>)</button>
+  <button class="camp-tab" onclick="showTab('segments',this)"><i class="bi bi-diagram-3-fill"></i> Par segments</button>
+</div>
+
+<!-- ═══ CRÉER ═══════════════════════════════════════════════ -->
+<div id="tab-creer">
+<div class="form-card">
+  <div class="form-card-title"><i class="bi bi-magic"></i>Créer une campagne avec NEX IA <span style="font-size:.6rem;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);color:var(--cyan);padding:.12rem .45rem;border-radius:4px;font-weight:700;margin-left:.3rem;">llama-3.3-70b</span></div>
+
+  <!-- Étape 1 -->
+  <div style="margin-bottom:1.1rem;">
+    <div style="font-size:.7rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.65rem;display:flex;align-items:center;gap:.5rem;">
+      <span style="width:20px;height:20px;background:var(--blue-d);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.65rem;color:#fff;flex-shrink:0;">1</span>Informations
+    </div>
+    <div class="grid3">
+      <div style="grid-column:1/3"><label class="nx-label">Nom de la campagne *</label><input type="text" id="campNom" class="nx-input" placeholder="Ex: Promo Gaming Décembre 2025" style="margin:0;"></div>
+      <div><label class="nx-label">Ton du message</label><select id="campTon" class="nx-input" style="margin:0;"><option value="commercial">Commercial</option><option value="amical">Amical</option><option value="urgent">Urgent</option><option value="exclusif">Exclusif</option><option value="fidélisation">Fidélisation</option></select></div>
+    </div>
+  </div>
+
+  <!-- Étape 2 -->
+  <div style="margin-bottom:1.1rem;">
+    <div style="font-size:.7rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.65rem;display:flex;align-items:center;gap:.5rem;">
+      <span style="width:20px;height:20px;background:var(--blue-d);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.65rem;color:#fff;flex-shrink:0;">2</span>Canal de diffusion
+    </div>
+    <div class="canal-pills">
+      <button class="canal-pill active" data-canal="Email"        onclick="setCanal(this)"><i class="bi bi-envelope-fill"></i>Email</button>
+      <button class="canal-pill"        data-canal="WhatsApp"     onclick="setCanal(this)"><i class="bi bi-whatsapp"></i>WhatsApp</button>
+      <button class="canal-pill"        data-canal="Facebook"     onclick="setCanal(this)"><i class="bi bi-facebook"></i>Facebook</button>
+      <button class="canal-pill"        data-canal="Multi-canal"  onclick="setCanal(this)"><i class="bi bi-broadcast"></i>Multi-canal</button>
+    </div>
+  </div>
+
+  <!-- Étape 3 -->
+  <div style="margin-bottom:1.1rem;">
+    <div style="font-size:.7rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.65rem;display:flex;align-items:center;gap:.5rem;">
+      <span style="width:20px;height:20px;background:var(--blue-d);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.65rem;color:#fff;flex-shrink:0;">3</span>
+      Sélectionner les clients
+      <span id="selCount" style="color:var(--cyan);font-weight:700;font-size:.72rem;margin-left:.25rem;"></span>
+    </div>
+    <div style="display:flex;gap:.4rem;margin-bottom:.6rem;flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-sm" onclick="selAll(true)"><i class="bi bi-check-all"></i>Tous</button>
+      <button class="btn btn-ghost btn-sm" onclick="selAll(false)"><i class="bi bi-x-lg"></i>Aucun</button>
+      <button class="btn btn-ghost btn-sm" onclick="selSeg('gamers')"><i class="bi bi-controller"></i>Gamers</button>
+      <button class="btn btn-ghost btn-sm" onclick="selSeg('entreprises')"><i class="bi bi-building"></i>Entreprises</button>
+      <button class="btn btn-ghost btn-sm" onclick="selSeg('fidelises')"><i class="bi bi-heart-fill"></i>Fidèles</button>
+    </div>
+    <div class="target-grid" id="clientGrid">
+      <% if(clients&&clients.length){ clients.forEach(c=>{ %>
+      <div class="client-card"
+           data-id="<%= c.id_user %>"
+           data-prenom="<%= c.prenom %>"
+           data-nom="<%= c.nom %>"
+           onclick="toggleClient(this)">
+        <div style="display:flex;justify-content:space-between;">
+          <div class="cc-name"><%= c.prenom %> <%= c.nom %></div>
+          <span class="cc-check"><i class="bi bi-check"></i></span>
+        </div>
+        <div class="cc-email"><%= c.email %></div>
+        <div class="cc-pills">
+          <% if(c.score_engagement){ %><span class="cc-pill">⚡ <%= c.score_engagement %></span><% } %>
+          <% if(c.score_fidelite){ %><span class="cc-pill" style="background:rgba(16,185,129,.1);color:#34D399;">❤ <%= c.score_fidelite %></span><% } %>
+        </div>
+      </div>
+      <% }) }else{ %>
+      <div style="grid-column:1/-1;text-align:center;padding:1.5rem;color:var(--muted);font-size:.82rem;">
+        <i class="bi bi-people" style="font-size:2rem;display:block;margin-bottom:.5rem;color:var(--muted2);"></i>
+        Aucun profil IA disponible.<br>
+        <a href="/admin/agents" style="color:var(--cyan);">Analyser les clients →</a>
+      </div>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div style="display:flex;gap:.65rem;flex-wrap:wrap;">
+    <button class="btn btn-ia" id="btnGen" onclick="genIA()"><i class="bi bi-magic"></i>Générer avec NEX IA</button>
+    <button class="btn btn-ghost" onclick="saveBrouillon()"><i class="bi bi-floppy-fill"></i>Sauvegarder brouillon</button>
+  </div>
+
+  <!-- Résultat IA -->
+  <div class="ia-result" id="iaRes">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem;">
+      <div style="font-size:.85rem;font-weight:800;color:var(--cyan);display:flex;align-items:center;gap:.45rem;"><i class="bi bi-robot"></i>Message généré par NEX IA</div>
+      <span id="resCanalBadge" class="badge b-ship"></span>
+    </div>
+
+    <div id="secSujet" style="display:none;margin-bottom:.85rem;">
+      <div class="ia-sec-lbl"><i class="bi bi-envelope"></i>Objet email</div>
+      <div class="ia-box" id="txtSujet" style="font-weight:700;color:var(--text);"></div>
+    </div>
+
+    <div style="margin-bottom:.85rem;">
+      <div class="ia-sec-lbl"><i class="bi bi-chat-text-fill"></i>Message complet</div>
+      <div class="ia-box"><button class="copy-btn" onclick="doCopy('msgContent')"><i class="bi bi-copy"></i>Copier</button><span id="msgContent"></span></div>
+    </div>
+
+    <div class="grid2" style="margin-bottom:.85rem;">
+      <div>
+        <div class="ia-sec-lbl"><i class="bi bi-cursor-fill"></i>Appel à l'action</div>
+        <div style="font-size:.85rem;font-weight:700;color:var(--cyan);" id="txtCTA">—</div>
+      </div>
+      <div>
+        <div class="ia-sec-lbl"><i class="bi bi-ticket-perforated-fill"></i>Code promo</div>
+        <div class="promo-code" id="txtPromo">—</div>
+      </div>
+    </div>
+
+    <div style="background:rgba(167,139,250,.05);border:1px solid rgba(167,139,250,.12);border-radius:9px;padding:.8rem 1rem;margin-bottom:1rem;">
+      <div class="ia-sec-lbl" style="color:var(--purple);"><i class="bi bi-lightbulb-fill"></i>Stratégie IA</div>
+      <div style="font-size:.8rem;color:var(--text2);line-height:1.6;" id="txtRaison">—</div>
+    </div>
+
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+      <button class="btn btn-success" id="btnEnv" onclick="envoyerMaint()"><i class="bi bi-send-fill"></i>Envoyer maintenant</button>
+      <button class="btn btn-warn"    onclick="planifier()" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:var(--amber);"><i class="bi bi-calendar-check-fill"></i>Planifier</button>
+      <button class="btn btn-cyan"    onclick="saveCampagne()"><i class="bi bi-floppy-fill"></i>Sauvegarder</button>
+      <button class="btn btn-ghost"   onclick="document.getElementById('iaRes').classList.remove('open');"><i class="bi bi-arrow-counterclockwise"></i>Régénérer</button>
+    </div>
+
+    <div id="modalPlanif" style="display:none;margin-top:1rem;background:#0D1117;border:1px solid var(--border2);border-radius:var(--radius);padding:1rem;">
+      <div style="font-size:.82rem;font-weight:700;margin-bottom:.75rem;color:var(--amber);"><i class="bi bi-calendar-check-fill" style="margin-right:.35rem;"></i>Planifier l'envoi</div>
+      <div class="grid2">
+        <div><label class="nx-label">Date et heure</label><input type="datetime-local" id="dateEnvoi" class="nx-input" style="margin:0;"></div>
+        <div style="display:flex;align-items:flex-end;gap:.5rem;">
+          <button class="btn btn-warn" onclick="confirmerPlanif()" style="background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.25);color:var(--amber);"><i class="bi bi-check-lg"></i>Confirmer</button>
+          <button class="btn btn-ghost" onclick="document.getElementById('modalPlanif').style.display='none'">Annuler</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ LISTE ════════════════════════════════════════════════ -->
+<div id="tab-liste" style="display:none;">
+<div class="card">
+  <div class="card-hd">
+    <div class="card-hd-title"><i class="bi bi-megaphone-fill text-cyan"></i><%= total %> campagne(s)</div>
+    <button class="btn btn-cyan btn-sm" onclick="showTab('creer',document.querySelectorAll('.camp-tab')[0])"><i class="bi bi-plus-circle-fill"></i>Nouvelle</button>
+  </div>
+  <% if(!rows||!rows.length){ %>
+  <div class="empty-state"><i class="bi bi-megaphone"></i>Aucune campagne.<br>Créez-en une avec NEX IA.</div>
+  <% }else{ rows.forEach(c=>{ const sm={'Brouillon':'b-warn','Planifiée':'b-ship','En cours':'b-ship','Envoyée':'b-ok','Terminée':'b-purple','Annulée':'b-cancel'};%>
+  <div class="camp-row">
+    <div>
+      <div class="camp-nom"><%= c.nom %></div>
+      <div class="camp-desc"><%= c.titre_ia||c.contenu?.substring(0,60)||'Contenu non généré' %></div>
+      <div class="camp-meta">
+        <span class="badge b-ship" style="font-size:.58rem;"><i class="bi bi-broadcast"></i><%= c.canal||'Email' %></span>
+        <span class="badge <%= sm[c.statut||'Brouillon']||'b-wait' %>" style="font-size:.58rem;"><%= c.statut||'Brouillon' %></span>
+        <% if(c.id_user_cible){ %><span class="badge b-purple" style="font-size:.58rem;"><i class="bi bi-person-fill"></i><%= c.prenom||'' %> <%= c.nom_client||'' %></span>
+        <% }else if(c.segment){ %><span class="badge b-warn" style="font-size:.58rem;"><i class="bi bi-people-fill"></i><%= c.segment %></span>
+        <% }else{ %><span class="badge b-ship" style="font-size:.58rem;"><i class="bi bi-globe"></i>Tous</span><% } %>
+        <% if(c.date_envoi){ %><span class="badge" style="font-size:.58rem;background:rgba(255,255,255,.04);color:var(--muted);"><i class="bi bi-clock"></i><%= new Date(c.date_envoi).toLocaleDateString('fr-FR') %></span><% } %>
+      </div>
+    </div>
+    <div style="text-align:center;min-width:80px;">
+      <div style="font-size:.88rem;font-weight:800;color:var(--cyan);"><%= c.nb_envoyes||0 %></div>
+      <div style="font-size:.6rem;color:var(--muted);">envoyés</div>
+    </div>
+    <div class="camp-actions">
+      <% if(!['Envoyée','Terminée','Annulée'].includes(c.statut)){ %>
+      <button class="btn btn-ia btn-sm" onclick="genContenu(<%= c.id_campagne %>,this)"><i class="bi bi-magic"></i>IA</button>
+      <button class="btn btn-success btn-sm" onclick="envCampagne(<%= c.id_campagne %>,this)"><i class="bi bi-send-fill"></i>Envoyer</button>
+      <% } %>
+      <a href="/admin/campagnes?edit=<%= c.id_campagne %>&tab=liste" class="btn btn-warn btn-sm"><i class="bi bi-pencil-fill"></i></a>
+      <a href="/admin/campagnes/delete/<%= c.id_campagne %>" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ?')"><i class="bi bi-trash-fill"></i></a>
+    </div>
+  </div>
+  <% }) } %>
+  <%- pagi(pages, pg, '?tab=liste') %>
+</div>
+</div>
+
+<!-- ═══ SEGMENTS ═══════════════════════════════════════════ -->
+<div id="tab-segments" style="display:none;">
+<div class="card">
+  <div class="card-hd">
+    <div class="card-hd-title"><i class="bi bi-diagram-3-fill text-cyan"></i>Campagnes automatiques par segment</div>
+    <button class="btn btn-ia btn-sm" onclick="genTousSegs(this)"><i class="bi bi-robot"></i>Générer tous</button>
+  </div>
+  <div class="card-body">
+    <p style="font-size:.82rem;color:var(--muted);margin-bottom:1.1rem;">NEX IA analyse votre base clients et génère automatiquement des campagnes ciblées pour chaque profil.</p>
+    <div class="seg-grid">
+      <% [
+        {id:'gamers',        nom:'Gamers',            icon:'bi-controller',      color:'#A78BFA', desc:'GPU, périphériques, casques gaming'},
+        {id:'entreprises',   nom:'Entreprises',       icon:'bi-building',        color:'#60A5FA', desc:'Réseau, switches, solutions IT'},
+        {id:'etudiants',     nom:'Étudiants',         icon:'bi-mortarboard-fill',color:'#34D399', desc:'Laptops abordables, accessoires'},
+        {id:'fidelises',     nom:'Clients fidèles',   icon:'bi-heart-fill',      color:'#F472B6', desc:'Offres exclusives, récompenses'},
+        {id:'nouveaux',      nom:'Nouveaux clients',  icon:'bi-stars',           color:'#FCD34D', desc:'Bienvenue, première commande'},
+        {id:'professionnels',nom:'Professionnels',    icon:'bi-briefcase-fill',  color:'#38BDF8', desc:'Workstations, garantie étendue'},
+      ].forEach(seg=>{ %>
+      <div class="seg-card">
+        <div style="display:flex;align-items:center;gap:.65rem;margin-bottom:.75rem;">
+          <div style="width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:<%= seg.color %>;flex-shrink:0;">
+            <i class="bi <%= seg.icon %>"></i>
+          </div>
+          <div>
+            <div style="font-size:.83rem;font-weight:800;"><%= seg.nom %></div>
+            <div style="font-size:.68rem;color:var(--muted);"><%= seg.desc %></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
+          <button class="btn btn-ia btn-sm" onclick="genSeg('<%= seg.id %>','<%= seg.nom %>',this)"><i class="bi bi-magic"></i>Générer IA</button>
+          <button class="btn btn-success btn-sm" onclick="envSeg('<%= seg.id %>',this)"><i class="bi bi-send-fill"></i>Envoyer</button>
+        </div>
+        <div id="sr_<%= seg.id %>" style="display:none;margin-top:.65rem;background:#060A14;border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:.65rem .8rem;font-size:.75rem;color:var(--text2);line-height:1.6;"></div>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+</div>
+</div>
+
+</div></div>
+<script>
+/* SIDEBAR */
+function toggleSidebar(){const sb=document.getElementById('sidebar');const open=sb.style.transform==='translateX(0px)'||sb.style.transform==='';sb.style.transform=(open&&window.innerWidth<1024)?'translateX(-100%)':'translateX(0px)';}
+if(window.innerWidth<1024)document.getElementById('sidebar').style.transform='translateX(-100%)';
+window.addEventListener('resize',()=>{if(window.innerWidth>=1024)document.getElementById('sidebar').style.transform='';});
+
+/* TOAST */
+function toast(msg,type='success'){const c=document.getElementById('tc');const t=document.createElement('div');t.className=`toast t-${type}`;t.innerHTML=`<i class="bi bi-${type==='success'?'check-circle':type==='error'?'x-circle':'info-circle'}-fill"></i>${msg}<button onclick="this.parentNode.remove()" style="margin-left:auto;background:none;border:none;color:inherit;cursor:pointer;font-size:1rem;">×</button>`;c.appendChild(t);setTimeout(()=>{t.style.transition='opacity .4s';t.style.opacity='0';setTimeout(()=>t.remove(),400);},5000);}
+
+/* TABS */
+function showTab(id,btn){['creer','liste','segments'].forEach(t=>document.getElementById('tab-'+t).style.display=t===id?'':'none');document.querySelectorAll('.camp-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+
+/* CANAL */
+let canal='Email';
+function setCanal(btn){document.querySelectorAll('.canal-pill').forEach(b=>b.classList.remove('active'));btn.classList.add('active');canal=btn.dataset.canal;}
+
+/* CLIENTS */
+const sel=new Set();
+function toggleClient(c){const id=c.dataset.id;if(sel.has(id)){sel.delete(id);c.classList.remove('selected');}else{sel.add(id);c.classList.add('selected');}updSel();}
+function selAll(v){document.querySelectorAll('.client-card').forEach(c=>{if(v){sel.add(c.dataset.id);c.classList.add('selected');}else{sel.delete(c.dataset.id);c.classList.remove('selected');}});updSel();}
+function selSeg(s){document.querySelectorAll('.client-card').forEach(c=>{if(c.dataset.seg===s){sel.add(c.dataset.id);c.classList.add('selected');}});updSel();}
+function updSel(){const el=document.getElementById('selCount');el.textContent=sel.size>0?`— ${sel.size} sélectionné(s)`:'';}
+
+/* GÉNÉRER */
+let lastGen=null;
+async function genIA(){
+  const nom=document.getElementById('campNom').value.trim();
+  if(!nom){toast('Entrez un nom de campagne.','error');return;}
+  if(sel.size===0){toast('Sélectionnez au moins un client.','error');return;}
+  const btn=document.getElementById('btnGen');
+  btn.innerHTML='<i class="bi bi-hourglass-split spin"></i>NEX IA génère…';btn.disabled=true;
+  document.getElementById('iaRes').classList.remove('open');
+  const firstId=[...sel][0];
+  const ton=document.getElementById('campTon').value;
+  try{
+    const r=await fetch(BASE_URL+'/admin/api/message-ia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id_user:firstId,canal,ton})});
+    const d=await r.json();
+    if(d.error)throw new Error(d.error);
+    lastGen={...d,nom,destinataires:[...sel],canal};
+    showRes(d);
+    toast(`✓ Message généré pour ${d.user?.prenom||'le client'} !`,'success');
+  }catch(e){toast('Erreur IA : '+e.message,'error');}
+  btn.innerHTML='<i class="bi bi-magic"></i>Générer avec NEX IA';btn.disabled=false;
+}
+function showRes(d){
+  const msg=d.message||{};
+  const ss=document.getElementById('secSujet');
+  if(canal==='Email'&&msg.sujet){document.getElementById('txtSujet').textContent=msg.sujet;ss.style.display='';}else ss.style.display='none';
+  document.getElementById('msgContent').textContent=msg.message||msg.contenu||JSON.stringify(msg,null,2);
+  document.getElementById('resCanalBadge').textContent=canal;
+  document.getElementById('txtCTA').textContent=msg.cta||'→ Voir nos offres';
+  document.getElementById('txtPromo').textContent=msg.code_promo||'NEXIO10';
+  document.getElementById('txtRaison').textContent=msg.raison_personnalisation||'Message adapté au profil du client.';
+  const r=document.getElementById('iaRes');r.classList.add('open');r.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+async function doCopy(id){await navigator.clipboard.writeText(document.getElementById(id).textContent);toast('✓ Copié !','success');}
+
+/* ENVOYER */
+async function envoyerMaint(){
+  if(!lastGen)return;
+  if(!confirm(`Envoyer "${lastGen.nom}" à ${lastGen.destinataires.length} client(s) via ${lastGen.canal} ?`))return;
+  const btn=document.getElementById('btnEnv');
+  btn.innerHTML='<i class="bi bi-hourglass-split spin"></i>Envoi…';btn.disabled=true;
+  const msg=lastGen.message||{};
+  try{
+    const fd=new URLSearchParams({nom:lastGen.nom,canal:lastGen.canal,contenu:msg.message||msg.contenu||'',statut:'Envoyée',date_envoi:new Date().toISOString().slice(0,16)});
+    await fetch(BASE_URL+'/admin/campagnes',{method:'POST',body:fd});
+    toast(`✓ Campagne envoyée à ${lastGen.destinataires.length} client(s) !`,'success');
+    setTimeout(()=>location.reload(),1800);
+  }catch(e){toast('Erreur : '+e.message,'error');}
+  btn.innerHTML='<i class="bi bi-send-fill"></i>Envoyer maintenant';btn.disabled=false;
+}
+function planifier(){const m=document.getElementById('modalPlanif');m.style.display=m.style.display==='none'?'':'none';const d=new Date();d.setDate(d.getDate()+1);d.setHours(9,0);document.getElementById('dateEnvoi').value=d.toISOString().slice(0,16);}
+async function confirmerPlanif(){
+  const date=document.getElementById('dateEnvoi').value;
+  if(!date||!lastGen)return;
+  const msg=lastGen.message||{};
+  const fd=new URLSearchParams({nom:lastGen.nom,canal:lastGen.canal,contenu:msg.message||'',statut:'Planifiée',date_envoi:date});
+  await fetch(BASE_URL+'/admin/campagnes',{method:'POST',body:fd});
+  toast(`✓ Planifiée pour le ${new Date(date).toLocaleString('fr-FR')} !`,'success');
+  document.getElementById('modalPlanif').style.display='none';
+  setTimeout(()=>location.reload(),1800);
+}
+async function saveCampagne(){if(!lastGen)return;const msg=lastGen.message||{};const fd=new URLSearchParams({nom:lastGen.nom,canal:lastGen.canal,contenu:msg.message||'',statut:'Brouillon'});await fetch(BASE_URL+'/admin/campagnes',{method:'POST',body:fd});toast('✓ Sauvegardé !','success');setTimeout(()=>location.reload(),1500);}
+async function saveBrouillon(){const nom=document.getElementById('campNom').value.trim();if(!nom){toast('Entrez un nom.','error');return;}const fd=new URLSearchParams({nom,canal,statut:'Brouillon'});await fetch(BASE_URL+'/admin/campagnes',{method:'POST',body:fd});toast('✓ Brouillon sauvegardé !','success');setTimeout(()=>location.reload(),1500);}
+
+/* LISTE ACTIONS */
+async function genContenu(id,btn){
+  const orig=btn.innerHTML;btn.innerHTML='<i class="bi bi-hourglass-split spin"></i>';btn.disabled=true;
+  try{const r=await fetch(BASE_URL+'/admin/api/ia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'generer_campagne',id_campagne:id})});const d=await r.json();if(d.error)throw new Error(d.error);btn.innerHTML='<i class="bi bi-check-lg"></i>OK';btn.style.color='#10B981';toast(d.msg||'✓ Contenu généré !','success');setTimeout(()=>{btn.innerHTML=orig;btn.style.color='';btn.disabled=false;},2500);}
+  catch(e){btn.innerHTML=orig;btn.disabled=false;toast('Erreur : '+e.message,'error');}
+}
+async function envCampagne(id,btn){
+  if(!confirm('Envoyer maintenant ?'))return;
+  const orig=btn.innerHTML;btn.innerHTML='<i class="bi bi-hourglass-split spin"></i>';btn.disabled=true;
+  try{const r=await fetch(BASE_URL+'/admin/campagnes/envoyer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id_campagne:id})});const d=await r.json();if(d.error)throw new Error(d.error);toast(`✓ ${d.envoyes||0} message(s) envoyé(s) !`,'success');setTimeout(()=>location.reload(),1800);}
+  catch(e){toast('Erreur : '+e.message,'error');btn.innerHTML=orig;btn.disabled=false;}
+}
+
+/* SEGMENTS */
+async function genSeg(seg,nom,btn){
+  const orig=btn.innerHTML;btn.innerHTML='<i class="bi bi-hourglass-split spin"></i>';btn.disabled=true;
+  const el=document.getElementById('sr_'+seg);
+  try{const r=await fetch(BASE_URL+'/admin/api/ia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'generer_campagne',id_campagne:0,segment:seg})});const d=await r.json();const msg=d.data?.contenu||d.contenu||d.msg||'Généré avec succès';el.textContent=msg;el.style.display='';toast(`✓ Campagne "${nom}" générée !`,'success');}
+  catch(e){toast('Erreur : '+e.message,'error');}
+  btn.innerHTML=orig;btn.disabled=false;
+}
+async function envSeg(seg,btn){if(!confirm(`Envoyer à tous les clients du segment "${seg}" ?`))return;toast(`Envoi en cours vers le segment ${seg}…`,'info');}
+async function genTousSegs(btn){
+  if(!confirm('Générer des campagnes pour tous les 6 segments ?'))return;
+  btn.innerHTML='<i class="bi bi-hourglass-split spin"></i>En cours…';btn.disabled=true;
+  try{const r=await fetch(BASE_URL+'/admin/api/ia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'segments'})});const d=await r.json();toast(`✓ ${d.campagnes?.length||6} campagnes générées !`,'success');setTimeout(()=>location.reload(),1800);}
+  catch(e){toast('Erreur : '+e.message,'error');}
+  btn.innerHTML='<i class="bi bi-robot"></i>Générer tous';btn.disabled=false;
+}
+
+/* INIT */
+document.querySelectorAll('.flash').forEach(el=>setTimeout(()=>{el.style.transition='opacity .4s';el.style.opacity='0';setTimeout(()=>el.remove(),400);},4500));
+const urlTab=new URLSearchParams(location.search).get('tab');
+if(urlTab==='liste')showTab('liste',document.querySelectorAll('.camp-tab')[1]);
+else if(urlTab==='segments')showTab('segments',document.querySelectorAll('.camp-tab')[2]);
+</script>
+</body></html>

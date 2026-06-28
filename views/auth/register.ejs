@@ -1,0 +1,38 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Inscription — Nexio S.A.</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="/css/nexio.css">
+</head>
+<body style="background:#06080F;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem;">
+<div style="width:100%;max-width:440px;">
+  <div style="text-align:center;margin-bottom:2rem;">
+    <a href="/" style="font-size:1.5rem;font-weight:900;text-decoration:none;color:#EDF2F7;"><i class="bi bi-cpu-fill" style="color:#00C8FF;"></i> Nexio<span style="color:#00C8FF;">.</span>ht</a>
+  </div>
+  <div style="background:#0D1117;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:2rem;">
+    <h1 style="font-size:1.2rem;margin-bottom:1.5rem;font-weight:800;">Créer un compte</h1>
+    <% if (flash.error && flash.error.length) { %>
+    <div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:.7rem 1rem;margin-bottom:1rem;color:#FCA5A5;font-size:.83rem;"><i class="bi bi-exclamation-circle-fill me-2"></i><%= flash.error[0] %></div>
+    <% } %>
+    <form method="POST" action="/auth/register">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+        <div><label class="nx-label">Prénom *</label><input type="text" name="prenom" class="nx-input" required placeholder="Jean"></div>
+        <div><label class="nx-label">Nom *</label><input type="text" name="nom" class="nx-input" required placeholder="Pierre"></div>
+      </div>
+      <label class="nx-label">Pseudo (unique)</label>
+      <input type="text" name="pseudo" class="nx-input" placeholder="jean_pierre" pattern="[a-zA-Z0-9_]+">
+      <label class="nx-label">Email *</label>
+      <input type="email" name="email" class="nx-input" required placeholder="jean@exemple.com">
+      <label class="nx-label">Mot de passe *</label>
+      <input type="password" name="password" class="nx-input" required minlength="6" placeholder="Min. 6 caractères">
+      <label class="nx-label">Confirmer le mot de passe *</label>
+      <input type="password" name="confirm_password" class="nx-input" required placeholder="Répéter le mot de passe">
+      <button type="submit" class="btn-nx-primary" style="width:100%;justify-content:center;padding:.75rem;font-size:.95rem;margin-top:.5rem;">
+        <i class="bi bi-person-plus-fill"></i>Créer mon compte
+      </button>
+    </form>
+    <div style="text-align:center;margin-top:1.2rem;font-size:.82rem;color:#64748B;">
+      Déjà un compte ? <a href="/auth/login" style="color:#00C8FF;font-weight:600;">Se connecter</a>
+    </div>
+  </div>
+</div>
+</body></html>

@@ -1,0 +1,191 @@
+<%- include('../partials/head') %>
+<%- include('../partials/navbar') %>
+
+<% if (!q && !cat) { %>
+<section class="nx-hero">
+  <div class="nx-section" style="padding-top:0;padding-bottom:0;">
+    <div class="row align-items-center g-4">
+      <div class="col-12 col-lg-7" data-animate>
+        <div class="hero-eyebrow"><i class="bi bi-lightning-charge-fill"></i>Haïti #1 Tech Store · Port-au-Prince</div>
+        <h1 class="hero-title mb-3">Votre partenaire<br>technologique<br>de confiance</h1>
+        <p class="mb-4" style="font-size:.95rem;max-width:480px;">PC, laptops, réseau, gaming — matériel certifié livré à Port-au-Prince sous 24–48h.</p>
+        <form class="hero-search-big mb-4" method="GET" action="/">
+          <input type="text" name="q" placeholder='Rechercher "laptop", "SSD"...' autocomplete="off">
+          <select name="cat" class="d-none d-md-block">
+            <option value="">Toutes catégories</option>
+            <% categories.forEach(c => { %><option value="<%= c.id_categorie %>"><%= c.nom %></option><% }) %>
+          </select>
+          <button type="submit"><i class="bi bi-search"></i><span>Rechercher</span></button>
+        </form>
+        <div class="hero-stats">
+          <div class="hero-stat"><strong><%= nbProduits %>+</strong><span>Produits</span></div>
+          <div class="hero-stat"><strong><%= nbMarques %>+</strong><span>Marques</span></div>
+          <div class="hero-stat"><strong>24h</strong><span>Livraison</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<% } %>
+
+<!-- Catégories strip -->
+<div class="cat-strip">
+  <div class="cat-strip-inner">
+    <a href="/" class="cat-chip <%= (!cat && !q) ? 'active' : '' %>"><i class="bi bi-grid-fill"></i>Tout</a>
+    <% categories.forEach(c => { %>
+    <a href="/?cat=<%= c.id_categorie %>" class="cat-chip <%= cat == c.id_categorie ? 'active' : '' %>"><i class="bi bi-tag"></i><%= c.nom %></a>
+    <% }) %>
+  </div>
+</div>
+
+<div class="trust-bar">
+  <div class="trust-bar-inner">
+    <div class="trust-item"><i class="bi bi-truck"></i><div><strong>Livraison 24–48h</strong><span>Port-au-Prince</span></div></div>
+    <div class="trust-item"><i class="bi bi-shield-check"></i><div><strong>Garantie produit</strong><span>6 mois à 2 ans</span></div></div>
+    <div class="trust-item"><i class="bi bi-credit-card"></i><div><strong>MonCash · Visa</strong><span>Paiement sécurisé</span></div></div>
+    <div class="trust-item"><i class="bi bi-robot"></i><div><strong>Assistant NEX</strong><span>Support 24h/24</span></div></div>
+  </div>
+</div>
+
+<div class="nx-section">
+  <div class="sec-hd">
+    <div class="sec-title">
+      <h2>
+        <% if (q) { %><i class="bi bi-search" style="color:var(--cyan);"></i>Résultats pour "<%= q %>"
+        <% } else if (cat) { %><i class="bi bi-funnel" style="color:var(--cyan);"></i>Produits filtrés
+        <% } else { %><i class="bi bi-star-fill" style="color:var(--cyan);"></i>Nos produits<% } %>
+      </h2>
+      <span style="color:var(--muted);font-size:.78rem;margin-left:.5rem;"><%= produits.length %> produit(s)</span>
+    </div>
+  </div>
+
+  <details class="mb-3" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+    <summary style="padding:.7rem 1rem;cursor:pointer;font-size:.83rem;font-weight:700;color:var(--text2);display:flex;align-items:center;gap:.5rem;list-style:none;">
+      <i class="bi bi-sliders" style="color:var(--cyan);"></i>Filtres avancés
+    </summary>
+    <div style="padding:1rem;border-top:1px solid var(--border);">
+      <form method="GET" action="/" class="row g-2 align-items-end">
+        <div class="col-6 col-md-2"><label class="nx-label">Prix min</label><input type="number" name="pmin" class="nx-input" style="margin:0;" value="<%= pmin||'' %>" min="0"></div>
+        <div class="col-6 col-md-2"><label class="nx-label">Prix max</label><input type="number" name="pmax" class="nx-input" style="margin:0;" value="<%= pmax||'' %>" min="0"></div>
+        <div class="col-6 col-md-3"><label class="nx-label">Catégorie</label>
+          <select name="cat" class="nx-input" style="margin:0;">
+            <option value="">Toutes</option>
+            <% categories.forEach(c => { %><option value="<%= c.id_categorie %>" <%= cat == c.id_categorie ? 'selected' : '' %>><%= c.nom %></option><% }) %>
+          </select>
+        </div>
+        <div class="col-6 col-md-2"><label class="nx-label">Trier</label>
+          <select name="tri" class="nx-input" style="margin:0;">
+            <option value="recent"    <%= tri==='recent'   ?'selected':'' %>>Récents</option>
+            <option value="prix_asc"  <%= tri==='prix_asc' ?'selected':'' %>>Prix ↑</option>
+            <option value="prix_desc" <%= tri==='prix_desc'?'selected':'' %>>Prix ↓</option>
+            <option value="nom"       <%= tri==='nom'      ?'selected':'' %>>Nom A→Z</option>
+          </select>
+        </div>
+        <% if(q){ %><input type="hidden" name="q" value="<%= q %>"><% } %>
+        <div class="col-12 col-md-3 d-flex gap-2">
+          <button type="submit" class="btn-nx-primary flex-1"><i class="bi bi-funnel"></i>Appliquer</button>
+          <a href="/" class="btn-nx-ghost"><i class="bi bi-x-lg"></i></a>
+        </div>
+      </form>
+    </div>
+  </details>
+
+  <% if (!produits.length) { %>
+  <div style="text-align:center;padding:5rem 0;" data-animate>
+    <i class="bi bi-search" style="font-size:3.5rem;color:var(--muted);display:block;margin-bottom:1rem;"></i>
+    <h3 style="color:var(--muted);">Aucun produit trouvé</h3>
+    <a href="/" class="btn-nx-primary" style="display:inline-flex;margin-top:1.2rem;"><i class="bi bi-grid-fill"></i>Voir tous les produits</a>
+  </div>
+  <% } else { %>
+  <div class="product-grid" id="productGrid">
+    <% produits.forEach((p, i) => {
+      const inWish = wishlistIds.includes(p.id_produit);
+    %>
+    <div class="pcard" data-animate style="animation-delay:<%= Math.min(i*0.04,0.4) %>s;"
+         onclick="location.href='/produit/<%= p.id_produit %>'">
+      <% if (i < 4 && !q && !cat) { %><span class="pcard-badge badge-new">Nouveau</span><% } %>
+      <% if (isLoggedIn) { %>
+      <button class="pcard-wish <%= inWish ? 'active' : '' %>" data-id="<%= p.id_produit %>"
+              onclick="event.stopPropagation();Wishlist.toggle(<%= p.id_produit %>,this)">
+        <i class="bi bi-heart<%= inWish ? '-fill' : '' %>"></i>
+      </button>
+      <% } %>
+      <div class="pcard-img">
+        <% if (p.image) { %>
+          <img src="<%= p.image %>" alt="<%= p.nom %>" loading="lazy" onerror="this.style.display='none'">
+        <% } else { %>
+          <div class="no-img" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:3rem;color:rgba(255,255,255,.05);"><i class="bi bi-cpu"></i></div>
+        <% } %>
+      </div>
+      <div class="pcard-body">
+        <div class="pcard-brand"><%= p.marque || p.categorie || 'Nexio' %></div>
+        <div class="pcard-name"><%= p.nom %></div>
+        <div class="pcard-price"><%= Number(p.prix).toLocaleString() %><span class="cur">HTG</span></div>
+        <% if (p.garantie) { %><div class="pcard-guarantee"><i class="bi bi-shield-check-fill"></i><%= p.garantie %></div><% } %>
+        <div class="pcard-actions" onclick="event.stopPropagation()">
+          <button class="btn-add-cart" data-id="<%= p.id_produit %>" data-name="<%= p.nom.replace(/'/g,"\\'") %>">
+            <i class="bi bi-cart-plus"></i>Ajouter
+          </button>
+          <button class="btn-quick-view" onclick="QuickView.open(<%= p.id_produit %>)"><i class="bi bi-eye"></i></button>
+        </div>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+  <% } %>
+</div>
+
+<!-- Publicités dynamiques NEX IA -->
+<% if (!q && !cat) { %>
+<div class="nx-section" style="padding-top:0;" id="pubsSection" data-animate>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
+    <h2 style="font-size:1rem;"><i class="bi bi-stars me-2" style="color:var(--cyan);"></i>Sélectionnés pour vous</h2>
+    <span id="pubBadge" class="nx-badge nx-badge-cyan" style="display:none;"><i class="bi bi-robot"></i>NEX personnalise</span>
+  </div>
+  <div class="row g-3" id="pubsGrid">
+    <% for(let i=0;i<3;i++) { %><div class="col-12 col-sm-4"><div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);min-height:140px;" class="skeleton"></div></div><% } %>
+  </div>
+</div>
+<script>
+(async function(){
+  try{
+    const r=await fetch('/api/publicites');
+    const d=await r.json();
+    if(!d.pubs?.length){document.getElementById('pubsSection').style.display='none';return;}
+    if(d.personnal)document.getElementById('pubBadge').style.display='inline-flex';
+    document.getElementById('pubsGrid').innerHTML=d.pubs.map(pub=>`
+      <div class="col-12 col-sm-4"><a href="${pub.lien_relatif||'/'}" style="display:block;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;text-decoration:none;transition:all .2s;" onmouseover="this.style.borderColor='rgba(0,200,255,.25)';this.style.transform='translateY(-3px)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)';this.style.transform=''">
+      ${pub.image?`<div style="height:120px;background:var(--surface);display:flex;align-items:center;justify-content:center;overflow:hidden;"><img src="${pub.image}" style="max-height:110px;max-width:100%;object-fit:contain;padding:.5rem;" onerror="this.parentNode.style.display='none'"></div>`:''}
+      <div style="padding:.85rem;"><div style="font-size:.82rem;font-weight:800;margin-bottom:.25rem;">${pub.titre}</div><div style="font-size:.72rem;color:var(--muted);margin-bottom:.4rem;">${pub.contenu}</div>${pub.prix?`<div style="font-size:.95rem;font-weight:900;color:var(--cyan);">${pub.prix}</div>`:''}</div>
+    </a></div>`).join('');
+  }catch{document.getElementById('pubsSection').style.display='none';}
+})();
+</script>
+<% } %>
+
+<!-- Feedbacks NEX IA -->
+<% if (!q && !cat && feedbacks.length) { %>
+<div class="nx-section" style="padding-top:0;">
+  <div class="sec-hd" data-animate>
+    <div class="sec-title"><h2><i class="bi bi-stars" style="color:var(--warn);"></i>Ce que disent nos clients</h2></div>
+    <span class="nx-badge nx-badge-cyan"><i class="bi bi-robot"></i>Sélection NEX</span>
+  </div>
+  <div class="testimonials-grid">
+    <% feedbacks.forEach((fb,i) => { %>
+    <div class="tcard" data-animate style="animation-delay:<%= i*0.08 %>s;">
+      <div class="tcard-stars">
+        <% for(let s=1;s<=5;s++){%><i class="bi bi-star<%=s<=fb.note?'-fill':''%> <%=s<=fb.note?'star-full':'star-empty'%>"></i><%}%>
+      </div>
+      <div class="tcard-text">"<%= fb.commentaire.substring(0,160) %><%= fb.commentaire.length>160?'…':'' %>"</div>
+      <div class="tcard-author">
+        <div class="tcard-avatar"><%= (fb.prenom||'N').charAt(0).toUpperCase() %></div>
+        <div><div class="tcard-name"><%= fb.prenom || 'Client' %></div><div class="tcard-badge"><i class="bi bi-check-circle-fill me-1"></i>Client vérifié</div></div>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+  <div class="text-center mt-3"><a href="/feedback" class="btn-nx-ghost"><i class="bi bi-chat-square-text"></i>Laisser un avis</a></div>
+</div>
+<% } %>
+
+<%- include('../partials/footer') %>

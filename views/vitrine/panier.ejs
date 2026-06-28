@@ -1,0 +1,65 @@
+<%- include('../partials/head') %>
+<%- include('../partials/navbar') %>
+<div class="nx-section">
+  <h1 style="font-size:1.5rem;margin-bottom:2rem;" data-animate><i class="bi bi-cart2" style="color:var(--cyan);margin-right:.5rem;"></i>Mon panier</h1>
+  <% if (!items.length) { %>
+  <div style="text-align:center;padding:5rem 0;">
+    <i class="bi bi-cart-x" style="font-size:3.5rem;color:var(--muted);display:block;margin-bottom:1rem;"></i>
+    <h3 style="color:var(--muted);">Votre panier est vide</h3>
+    <a href="/" class="btn-nx-primary" style="display:inline-flex;margin-top:1.2rem;"><i class="bi bi-grid-fill"></i>Voir le catalogue</a>
+  </div>
+  <% } else { %>
+  <div class="row g-4">
+    <div class="col-12 col-lg-8">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;">
+        <% items.forEach(it => { const p = it.produit; %>
+        <div style="display:grid;grid-template-columns:72px 1fr auto;gap:1rem;align-items:center;padding:1rem 1.2rem;border-bottom:1px solid rgba(255,255,255,.04);">
+          <div style="width:64px;height:64px;background:var(--surface);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <% if(p.image){ %><img src="<%= p.image %>" style="max-width:100%;max-height:100%;object-fit:contain;" onerror="this.style.display='none'"><% } else { %><i class="bi bi-cpu" style="color:rgba(255,255,255,.1);"></i><% } %>
+          </div>
+          <div>
+            <div style="font-weight:700;font-size:.88rem;"><%= p.nom %></div>
+            <div style="font-weight:800;color:var(--cyan);font-size:.95rem;margin:.2rem 0;"><%= Number(p.prix).toLocaleString() %> HTG</div>
+            <div style="display:flex;align-items:center;gap:.4rem;margin-top:.3rem;">
+              <form method="POST" action="/panier/update" style="display:flex;align-items:center;gap:.3rem;">
+                <input type="hidden" name="id" value="<%= p.id_produit %>">
+                <button type="button" style="width:24px;height:24px;background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:5px;color:var(--text);cursor:pointer;" onclick="const inp=this.nextElementSibling;inp.value=Math.max(0,parseInt(inp.value)-1);this.parentNode.submit();">−</button>
+                <input type="number" name="qty" class="qty-input" value="<%= it.qty %>" min="0" max="99" data-id="<%= p.id_produit %>" style="width:40px;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:.2rem;font-size:.82rem;font-family:inherit;">
+                <button type="button" style="width:24px;height:24px;background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:5px;color:var(--text);cursor:pointer;" onclick="const inp=this.previousElementSibling;inp.value=parseInt(inp.value)+1;this.parentNode.submit();">+</button>
+                <button type="submit" style="display:none;"></button>
+              </form>
+              <a href="/panier/supprimer/<%= p.id_produit %>" style="color:var(--danger);font-size:.8rem;margin-left:.3rem;"><i class="bi bi-trash"></i></a>
+            </div>
+          </div>
+          <div style="text-align:right;"><div style="font-weight:900;font-size:1rem;"><%= Number(it.st).toLocaleString() %></div><div style="font-size:.68rem;color:var(--muted);">HTG</div></div>
+        </div>
+        <% }) %>
+        <div style="padding:.75rem 1.2rem;display:flex;justify-content:space-between;align-items:center;">
+          <a href="/" style="color:var(--muted);font-size:.82rem;"><i class="bi bi-arrow-left"></i>Continuer</a>
+          <a href="/panier/vider" style="color:var(--danger);font-size:.78rem;">Vider le panier</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.4rem;position:sticky;top:80px;">
+        <h3 style="font-size:.95rem;font-weight:800;margin-bottom:1.2rem;">Récapitulatif</h3>
+        <% items.forEach(it => { %>
+        <div style="display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted);margin-bottom:.4rem;">
+          <span><%= it.produit.nom.substring(0,28) %> ×<%= it.qty %></span>
+          <span><%= Number(it.st).toLocaleString() %></span>
+        </div>
+        <% }) %>
+        <div style="display:flex;justify-content:space-between;font-size:1.1rem;font-weight:900;color:var(--cyan);border-top:1px solid var(--border);padding-top:.9rem;margin-top:.6rem;">
+          <span>Total</span><span><%= Number(total).toLocaleString() %> HTG</span>
+        </div>
+        <% if (isLoggedIn) { %>
+        <a href="/checkout" class="btn-nx-primary" style="width:100%;justify-content:center;margin-top:1rem;font-size:.95rem;padding:.75rem;"><i class="bi bi-bag-check-fill"></i>Commander</a>
+        <% } else { %>
+        <a href="/auth/login" class="btn-nx-primary" style="width:100%;justify-content:center;margin-top:1rem;"><i class="bi bi-box-arrow-in-right"></i>Se connecter pour commander</a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+  <% } %>
+</div>
+<%- include('../partials/footer') %>

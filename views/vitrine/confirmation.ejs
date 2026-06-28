@@ -1,0 +1,15 @@
+<%- include('../partials/head') %>
+<%- include('../partials/navbar') %>
+<div class="nx-section" style="max-width:600px;margin:0 auto;text-align:center;padding:4rem 1rem;">
+  <div style="font-size:3.5rem;margin-bottom:1rem;">🎉</div>
+  <h2 style="color:var(--success);margin-bottom:.6rem;">Commande confirmée !</h2>
+  <p style="color:var(--text2);margin-bottom:.4rem;">Référence : <strong style="color:var(--text);">#CMD-<%= String(cmdId).padStart(5,'0') %></strong></p>
+  <p style="color:var(--text2);margin-bottom:.4rem;">Montant : <strong style="color:var(--cyan);"><%= Number(total).toLocaleString() %> HTG</strong></p>
+  <p style="color:var(--text2);margin-bottom:.4rem;">Paiement : <strong><%= methode %></strong></p>
+  <p style="font-size:.85rem;color:var(--muted);margin-bottom:2rem;">Notre équipe vous contactera pour confirmer la livraison. Tél : <strong>4810-8541</strong></p>
+  <div style="display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap;">
+    <a href="/" class="btn-nx-primary"><i class="bi bi-house-fill"></i>Retour à la boutique</a>
+    <a href="/compte" class="btn-nx-ghost"><i class="bi bi-bag-check"></i>Mes commandes</a>
+  </div>
+</div>
+<%- include('../partials/footer') %>

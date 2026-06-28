@@ -1,0 +1,100 @@
+<div class="sb" id="sidebar">
+
+  <!-- Logo -->
+  <div class="sb-logo">
+    <div class="sb-logo-mark"><i class="bi bi-cpu-fill" style="color:#fff;"></i></div>
+    <div class="sb-logo-text">
+      <div class="sb-logo-name">Nexio<span>.Admin</span></div>
+      <div class="sb-logo-sub">Port-au-Prince · Haïti</div>
+    </div>
+  </div>
+
+  <!-- Principal -->
+  <div class="sb-sec">Principal</div>
+  <a href="/admin" class="sb-link <%= page==='dashboard'?'active':'' %>">
+    <i class="bi bi-grid-fill"></i>Tableau de bord
+  </a>
+  <a href="/" class="sb-link" target="_blank">
+    <i class="bi bi-shop"></i>Voir la boutique
+    <i class="bi bi-box-arrow-up-right" style="margin-left:auto;font-size:.6rem;color:var(--muted2);"></i>
+  </a>
+
+  <div class="sb-divider"></div>
+
+  <!-- Catalogue -->
+  <div class="sb-sec">Catalogue</div>
+  <a href="/admin/produits"        class="sb-link <%= page==='produits'?'active':'' %>"><i class="bi bi-box-seam-fill"></i>Produits</a>
+  <a href="/admin/categories"      class="sb-link <%= page==='categories'?'active':'' %>"><i class="bi bi-tag-fill"></i>Catégories</a>
+  <a href="/admin/sous_categories" class="sb-link <%= page==='sous_categories'?'active':'' %>"><i class="bi bi-tags-fill"></i>Sous-catégories</a>
+  <a href="/admin/marques"         class="sb-link <%= page==='marques'?'active':'' %>"><i class="bi bi-award-fill"></i>Marques</a>
+  <a href="/admin/fournisseurs"    class="sb-link <%= page==='fournisseurs'?'active':'' %>"><i class="bi bi-building"></i>Fournisseurs</a>
+
+  <div class="sb-divider"></div>
+
+  <!-- Commerce -->
+  <div class="sb-sec">Commerce</div>
+  <a href="/admin/commandes" class="sb-link <%= page==='commandes'?'active':'' %>">
+    <i class="bi bi-bag-check-fill"></i>Commandes
+    <% if(stats&&stats.en_attente>0){%><span class="sb-badge"><%= stats.en_attente %></span><%}%>
+  </a>
+  <a href="/admin/clients" class="sb-link <%= page==='clients'?'active':'' %>">
+    <i class="bi bi-people-fill"></i>Clients
+  </a>
+  <a href="/admin/stocks" class="sb-link <%= page==='stocks'?'active':'' %>">
+    <i class="bi bi-archive-fill"></i>Stocks
+    <% if(stats&&stats.stock_bas>0){%><span class="sb-badge sb-badge-warn"><%= stats.stock_bas %></span><%}%>
+  </a>
+
+  <div class="sb-divider"></div>
+
+  <!-- Communauté -->
+  <div class="sb-sec">Communauté</div>
+  <a href="/admin/feedbacks" class="sb-link <%= page==='feedbacks'?'active':'' %>">
+    <i class="bi bi-star-fill"></i>Feedbacks
+    <% if(stats&&stats.feedbacks>0){%><span class="sb-badge"><%= stats.feedbacks %></span><%}%>
+  </a>
+  <a href="/admin/messages" class="sb-link <%= page==='messages'?'active':'' %>">
+    <i class="bi bi-envelope-fill"></i>Messages
+    <% if(stats&&stats.messages>0){%><span class="sb-badge"><%= stats.messages %></span><%}%>
+  </a>
+  <a href="/admin/chat" class="sb-link <%= page==='chat'?'active':'' %>">
+    <i class="bi bi-chat-dots-fill"></i>Chat NEX
+  </a>
+
+  <div class="sb-divider"></div>
+
+  <!-- Intelligence IA -->
+  <div class="sb-sec">Intelligence IA</div>
+  <a href="/admin/campagnes" class="sb-link <%= page==='campagnes'?'active':'' %>" style="<%= page==='campagnes'?'':'color:var(--muted);' %>">
+    <i class="bi bi-megaphone-fill" style="color:#38BDF8;"></i>Campagnes IA
+  </a>
+  <a href="/admin/marketing" class="sb-link <%= page==='marketing'?'active':'' %>" style="<%= page==='marketing'?'':'color:var(--muted);' %>">
+    <i class="bi bi-lightning-charge-fill" style="color:#F59E0B;"></i>Marketing IA
+  </a>
+  <a href="/admin/agents" class="sb-link <%= page==='agents'?'active':'' %>" style="<%= page==='agents'?'':'color:var(--muted);' %>">
+    <i class="bi bi-robot" style="color:#A78BFA;"></i>Agents IA
+  </a>
+
+  <div class="sb-divider"></div>
+
+  <!-- Analyse -->
+  <div class="sb-sec">Analyse</div>
+  <a href="/admin/rapports" class="sb-link <%= page==='rapports'?'active':'' %>"><i class="bi bi-bar-chart-fill"></i>Rapports</a>
+  <a href="/admin/journaux" class="sb-link <%= page==='journaux'?'active':'' %>"><i class="bi bi-journal-text"></i>Journaux</a>
+
+  <!-- Footer -->
+  <div class="sb-bottom">
+    <% if(user){ %>
+    <div class="sb-user">
+      <div class="sb-avatar"><%= (user.prenom||'A').charAt(0).toUpperCase()+(user.nom||'').charAt(0).toUpperCase() %></div>
+      <div>
+        <div class="sb-user-name"><%= user.prenom %> <%= user.nom %></div>
+        <div class="sb-user-role"><%= user.role %></div>
+      </div>
+    </div>
+    <% } %>
+    <a href="/auth/logout">
+      <button class="btn-logout"><i class="bi bi-box-arrow-right"></i>Déconnexion</button>
+    </a>
+  </div>
+</div>

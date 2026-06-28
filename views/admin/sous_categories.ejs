@@ -1,0 +1,57 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title><%= title %> — Nexio Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<script>const BASE_URL='<%- BASE_URL %>';</script>
+<%- include('./admin_styles') %>
+</head><body>
+<%- include('./admin_sidebar', { page: page, stats: stats }) %>
+<div class="main" id="mainContent">
+<%- include('./admin_topbar', { title: title }) %>
+<div class="content">
+<%- include('./admin_flash') %>
+<div class="form-card">
+  <div class="form-card-title"><i class="bi bi-<%= edit?'pencil-fill':'plus-circle-fill' %>"></i><%= edit?'Modifier':'Nouvelle' %> sous-catégorie</div>
+  <form method="POST" action="/admin/sous_categories" style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap;">
+    <input type="hidden" name="id" value="<%= edit?edit.id_sous_categorie:'' %>">
+    <div style="flex:1;min-width:180px;"><label class="nx-label">Nom *</label><input type="text" name="nom" class="nx-input" required style="margin:0;" value="<%= edit?edit.nom:'' %>"></div>
+    <div style="min-width:200px;"><label class="nx-label">Catégorie *</label>
+      <select name="id_categorie" class="nx-input" required style="margin:0;">
+        <option value="">-- Choisir --</option>
+        <% categories.forEach(c=>{ %><option value="<%= c.id_categorie %>" <%= edit&&edit.id_categorie==c.id_categorie?'selected':'' %>><%= c.nom %></option><% }) %>
+      </select></div>
+    <button class="btn btn-success" type="submit"><i class="bi bi-check-lg"></i>Enregistrer</button>
+    <% if(edit){ %><a href="/admin/sous_categories" class="btn btn-ghost"><i class="bi bi-x-lg"></i></a><% } %>
+  </form>
+</div>
+<div class="card">
+  <div class="card-hd">
+    <div class="card-hd-title"><i class="bi bi-tags-fill text-cyan"></i><%= total %> sous-catégorie(s)</div>
+    <form method="GET" action="/admin/sous_categories" class="srow">
+      <input type="text" name="q" placeholder="Rechercher…" value="<%= q %>">
+      <button class="btn btn-primary btn-sm" type="submit"><i class="bi bi-search"></i></button>
+    </form>
+  </div>
+  <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Nom</th><th>Catégorie</th><th>Actions</th></tr></thead><tbody>
+  <% rows.forEach((sc,i)=>{ %>
+  <tr>
+    <td class="text-muted"><%= (pg-1)*15+i+1 %></td>
+    <td><strong><%= sc.nom %></strong></td>
+    <td><span class="badge b-ship"><%= sc.categorie||'—' %></span></td>
+    <td><div style="display:flex;gap:.35rem;">
+      <a href="/admin/sous_categories?edit=<%= sc.id_sous_categorie %>" class="btn btn-warn btn-sm"><i class="bi bi-pencil-fill"></i></a>
+      <a href="/admin/sous_categories/delete/<%= sc.id_sous_categorie %>" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ?')"><i class="bi bi-trash-fill"></i></a>
+    </div></td>
+  </tr>
+  <% }) %>
+  <% if(!rows.length){ %><tr><td colspan="4"><div class="empty-state"><i class="bi bi-tags"></i>Aucune sous-catégorie</div></td></tr><% } %>
+  </tbody></table></div>
+  <% if(pages>1){ %><div class="pagi"><% for(let i=1;i<=pages;i++){ %><% if(i===pg){ %><span class="cur"><%= i %></span><% }else{ %><a href="/admin/sous_categories?pg=<%= i %>&q=<%= q %>"><%= i %></a><% } %><% } %></div><% } %>
+</div>
+</div></div>
+<script>
+function toggleSidebar(){const sb=document.getElementById('sidebar');sb.style.transform=sb.style.transform==='translateX(0px)'?'translateX(-100%)':'translateX(0px)';}
+if(window.innerWidth<1024)document.getElementById('sidebar').style.transform='translateX(-100%)';
+document.querySelectorAll('.flash').forEach(el=>setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),400);},4500));
+</script>
+</body></html>

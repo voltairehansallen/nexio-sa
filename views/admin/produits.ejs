@@ -1,0 +1,107 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title><%= title %> — Nexio Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script>const BASE_URL='<%- BASE_URL %>';</script>
+<%- include('./admin_styles') %>
+</head><body>
+<%- include('./admin_sidebar', { page: page, stats: stats }) %>
+<div class="main" id="mainContent">
+<%- include('./admin_topbar', { title: title }) %>
+<div class="content">
+<%- include('./admin_flash') %>
+
+<div class="form-card">
+  <div class="form-card-title"><i class="bi bi-<%= edit?'pencil-fill':'plus-circle-fill' %>"></i><%= edit?'Modifier':'Ajouter' %> un produit</div>
+  <form method="POST" action="/admin/produits" enctype="multipart/form-data">
+    <div class="grid3">
+      <div style="grid-column:1/3"><label class="nx-label">Nom *</label><input type="text" name="nom" class="nx-input" required value="<%= edit?edit.nom:'' %>"></div>
+      <div><label class="nx-label">Prix (HTG) *</label><input type="number" name="prix" class="nx-input" required min="0" step="0.01" value="<%= edit?edit.prix:'' %>"></div>
+    </div>
+    <div class="grid3">
+      <div><label class="nx-label">Coût d'achat</label><input type="number" name="cout" class="nx-input" min="0" step="0.01" value="<%= edit&&edit.cout?edit.cout:'' %>"></div>
+      <div><label class="nx-label">Quantité</label><input type="number" name="quantite" class="nx-input" min="0" value="<%= edit?edit.quantite:0 %>"></div>
+      <div><label class="nx-label">Seuil alerte</label><input type="number" name="seuil_alerte" class="nx-input" min="0" value="<%= edit?edit.seuil_alerte:5 %>"></div>
+    </div>
+    <div class="grid3">
+      <div><label class="nx-label">Sous-catégorie</label><select name="id_sous_categorie" class="nx-input"><option value="">-- Aucune --</option>
+        <% sous_cats.forEach(sc=>{ %><option value="<%= sc.id_sous_categorie %>" <%= edit&&edit.id_sous_categorie==sc.id_sous_categorie?'selected':'' %>><%= sc.cat %> › <%= sc.nom %></option><% }) %>
+      </select></div>
+      <div><label class="nx-label">Marque</label><select name="id_marque" class="nx-input"><option value="">-- Aucune --</option>
+        <% marques.forEach(m=>{ %><option value="<%= m.id_marque %>" <%= edit&&edit.id_marque==m.id_marque?'selected':'' %>><%= m.nom %></option><% }) %>
+      </select></div>
+      <div><label class="nx-label">Fournisseur</label><select name="id_fournisseur" class="nx-input"><option value="">-- Aucun --</option>
+        <% fournisseurs.forEach(f=>{ %><option value="<%= f.id_fournisseur %>" <%= edit&&edit.id_fournisseur==f.id_fournisseur?'selected':'' %>><%= f.nom %></option><% }) %>
+      </select></div>
+    </div>
+    <div class="grid2">
+      <div><label class="nx-label">Garantie</label><input type="text" name="garantie" class="nx-input" placeholder="Ex: 1 an" value="<%= edit?edit.garantie||'':'' %>"></div>
+      <div><label class="nx-label">Statut</label><select name="statut" class="nx-input">
+        <% ['Disponible','Rupture','Bientôt disponible'].forEach(s=>{ %><option value="<%= s %>" <%= (edit?edit.statut:'Disponible')===s?'selected':'' %>><%= s %></option><% }) %>
+      </select></div>
+    </div>
+    <div class="grid2">
+      <div><label class="nx-label">Image URL</label><input type="text" name="image" class="nx-input" placeholder="https://…" value="<%= edit?edit.image||'':'' %>">
+        <% if(edit&&edit.image){ %><img src="<%= edit.image %>" class="img-thumb" onerror="this.style.display='none'" style="margin-top:-.4rem;margin-bottom:.6rem;" alt=""><% } %>
+      </div>
+      <div><label class="nx-label">Upload image</label><input type="file" name="image_file" class="nx-input" accept="image/*" style="padding:.42rem;"></div>
+    </div>
+    <label class="nx-label">Description</label>
+    <textarea name="description" class="nx-input" rows="3"><%= edit?edit.description||'':'' %></textarea>
+    <input type="hidden" name="id" value="<%= edit?edit.id_produit:'' %>">
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+      <button class="btn btn-success" type="submit"><i class="bi bi-check-lg"></i><%= edit?'Mettre à jour':'Ajouter' %></button>
+      <% if(edit){ %><a href="/admin/produits" class="btn btn-ghost"><i class="bi bi-x-lg"></i>Annuler</a><% } %>
+    </div>
+  </form>
+</div>
+<div class="card">
+  <div class="card-hd">
+    <div class="card-hd-title"><i class="bi bi-box-seam text-cyan"></i><%= total %> produit(s)</div>
+    <form method="GET" action="/admin/produits" class="srow">
+      <input type="text" name="q" placeholder="🔍 Rechercher…" value="<%= q %>">
+      <select name="cat"><option value="">Toutes catégories</option>
+        <% categories.forEach(c=>{ %><option value="<%= c.id_categorie %>" <%= cat==c.id_categorie?'selected':'' %>><%= c.nom %></option><% }) %>
+      </select>
+      <select name="stat"><option value="">Tous statuts</option>
+        <% ['Disponible','Rupture','Bientôt disponible'].forEach(s=>{ %><option value="<%= s %>" <%= stat===s?'selected':'' %>><%= s %></option><% }) %>
+      </select>
+      <button class="btn btn-primary btn-sm" type="submit"><i class="bi bi-search"></i></button>
+      <% if(q||cat||stat){ %><a href="/admin/produits" class="btn btn-ghost btn-sm"><i class="bi bi-x-lg"></i></a><% } %>
+    </form>
+  </div>
+  <div class="tbl-wrap"><table><thead><tr><th>Img</th><th>Produit</th><th>Catégorie</th><th>Marque</th><th>Prix</th><th>Stock</th><th>Statut</th><th>Actions</th></tr></thead><tbody>
+  <% rows.forEach(p=>{ %>
+  <tr>
+    <td><% if(p.image){ %><img src="<%= p.image %>" class="img-thumb" onerror="this.style.display='none'" alt=""><% } else { %><div class="img-thumb" style="display:flex;align-items:center;justify-content:center;"><i class="bi bi-image" style="color:#1E3A5F;"></i></div><% } %></td>
+    <td><strong style="font-size:.8rem;"><%= p.nom.substring(0,42) %></strong></td>
+    <td class="text-muted" style="font-size:.74rem;"><%= p.categorie||'—' %></td>
+    <td class="text-muted" style="font-size:.74rem;"><%= p.marque||'—' %></td>
+    <td><strong><%= Number(p.prix).toLocaleString() %></strong></td>
+    <td><strong style="color:<%= p.quantite<=p.seuil_alerte?(p.quantite==0?'#EF4444':'#F59E0B'):'#10B981' %>;"><%= p.quantite %></strong></td>
+    <td><%- badgeStatut(p.statut) %></td>
+    <td><div style="display:flex;gap:.35rem;">
+      <a href="/admin/produits?edit=<%= p.id_produit %>" class="btn btn-warn btn-sm"><i class="bi bi-pencil-fill"></i></a>
+      <a href="/admin/produits/delete/<%= p.id_produit %>" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ?')"><i class="bi bi-trash-fill"></i></a>
+    </div></td>
+  </tr>
+  <% }) %>
+  <% if(!rows.length){ %><tr><td colspan="8"><div class="empty-state"><i class="bi bi-box-seam"></i>Aucun produit</div></td></tr><% } %>
+  </tbody></table></div>
+  <%- pagi(pages,pg,'?'+new URLSearchParams({q,cat,stat}).toString().replace(/=&/g,'&').replace(/=$/,'')) %>
+</div>
+</div></div>
+<script>
+function toggleSidebar(){const sb=document.getElementById('sidebar');sb.style.transform=sb.style.transform==='translateX(0px)'||sb.style.transform===''&&window.innerWidth>=1024?'translateX(-100%)':'translateX(0px)';}
+if(window.innerWidth<1024)document.getElementById('sidebar').style.transform='translateX(-100%)';
+document.querySelectorAll('.flash').forEach(el=>setTimeout(()=>{el.style.transition='opacity .4s';el.style.opacity='0';setTimeout(()=>el.remove(),400);},4500));
+async function genCampagne(id,btn){if(!confirm('Générer avec NEX IA ?'))return;const orig=btn.innerHTML;btn.innerHTML='<i class="bi bi-hourglass-split"></i>';btn.disabled=true;try{const r=await fetch(BASE_URL+'/admin/api/ia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'generer_campagne',id_campagne:id})});const d=await r.json();btn.innerHTML='<i class="bi bi-check-lg"></i>';btn.style.color='#10B981';setTimeout(()=>{btn.innerHTML=orig;btn.style.color='';btn.disabled=false;},2500);showToast(d.msg||'Campagne générée !','success');}catch{btn.innerHTML=orig;btn.disabled=false;showToast('Serveur IA indisponible','error');}}
+async function envoyerCampagne(id,btn){if(!confirm('Envoyer cette campagne maintenant ?'))return;const orig=btn.innerHTML;btn.innerHTML='<i class="bi bi-hourglass-split"></i>';btn.disabled=true;try{const r=await fetch(BASE_URL+'/admin/api/ia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'envoyer_campagne',id_campagne:id})});const d=await r.json();showToast(`Envoyée: ${d.envoyes||0}/${d.destinataires||0}`,'success');location.reload();}catch{showToast('Erreur envoi','error');}btn.innerHTML=orig;btn.disabled=false;}
+async function lancerAnalyseIA(){const r=await fetch(BASE_URL+'/admin/api/ia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'rapport_ventes',jours:30})});const d=await r.json();alert(d.analyse_ia||JSON.stringify(d).slice(0,300));}
+function showToast(msg,type='success'){const t=document.createElement('div');t.style.cssText='position:fixed;top:70px;right:1.2rem;z-index:9999;padding:.75rem 1.1rem;border-radius:10px;font-size:.83rem;font-weight:700;display:flex;align-items:center;gap:.5rem;box-shadow:0 8px 24px rgba(0,0,0,.4);max-width:340px;animation:slideDown .3s ease;';t.style.cssText+=type==='success'?'background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.25);color:#34D399;':'background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);color:#FCA5A5;';t.innerHTML=`<i class="bi bi-${type==='success'?'check-circle':'exclamation-circle'}-fill"></i>${msg}<button onclick="this.parentNode.remove()" style="margin-left:auto;background:none;border:none;color:inherit;cursor:pointer;">×</button>`;document.body.appendChild(t);setTimeout(()=>{t.style.transition='opacity .4s,transform .4s';t.style.opacity='0';t.style.transform='translateX(120%)';setTimeout(()=>t.remove(),400);},4000);}
+function badgeStatut(s){const m={'En attente':'b-wait','Confirmée':'b-ship','Expédiée':'b-ship','Livrée':'b-ok','Annulée':'b-cancel','Disponible':'b-avail','Rupture':'b-rupture','Actif':'b-ok','Inactif':'b-cancel','Brouillon':'b-warn','Envoyée':'b-ok','En cours':'b-ship','Approuvé':'b-ok','Rejeté':'b-cancel','Non lu':'b-warn','Lu':'b-ok','Répondu':'b-ship','Terminée':'b-purple','Planifiée':'b-warn'};const cls=m[s]||'b-wait';return`<span class="badge ${cls}">${s}</span>`;}
+function pagi(pages,cur,base){if(pages<=1)return'';let h='<div class="pagi">';for(let i=1;i<=pages;i++){const u=base+'&pg='+i;if(i===cur)h+=`<span class="cur">${i}</span>`;else h+=`<a href="${u}">${i}</a>`;}return h+'</div>';}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+</script>
+<style>@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}</style>
+</body></html>

@@ -1,0 +1,34 @@
+<%- include('../partials/head') %>
+<%- include('../partials/navbar') %>
+<div class="nx-section">
+  <div class="row g-4">
+    <div class="col-12 col-lg-5" data-animate>
+      <h1 style="font-size:1.8rem;margin-bottom:1rem;">Contactez<br><span style="color:var(--cyan);">Nexio S.A.</span></h1>
+      <p class="mb-4">Disponibles du lundi au samedi pour répondre à toutes vos questions.</p>
+      <div class="row g-3">
+        <% [['bi-telephone-fill','Téléphone','4810-8541','tel:48108541'],['bi-envelope-fill','Email','info@nexio.ht','mailto:info@nexio.ht'],['bi-geo-alt-fill','Adresse','Delmas, Port-au-Prince',null],['bi-clock-fill','Horaires','Lun–Sam : 8h00–18h00',null]].forEach(([icon,label,val,href]) => { %>
+        <div class="col-12 col-sm-6"><div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.1rem;display:flex;gap:.8rem;align-items:flex-start;">
+          <div style="width:38px;height:38px;background:rgba(0,200,255,.1);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="bi <%= icon %>" style="color:var(--cyan);font-size:1rem;"></i></div>
+          <div><div style="font-size:.7rem;color:var(--muted);font-weight:700;text-transform:uppercase;"><%= label %></div><% if(href){ %><a href="<%= href %>" style="font-weight:700;font-size:.88rem;color:var(--text);"><%= val %></a><% } else { %><div style="font-weight:700;font-size:.88rem;"><%= val %></div><% } %></div>
+        </div></div>
+        <% }) %>
+      </div>
+    </div>
+    <div class="col-12 col-lg-7" data-animate style="animation-delay:.1s;">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.8rem;">
+        <h3 style="font-size:1.1rem;margin-bottom:1.2rem;"><i class="bi bi-send me-2" style="color:var(--cyan);"></i>Envoyer un message</h3>
+        <% if(flash.success&&flash.success.length){ %><div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);border-radius:var(--radius);padding:.8rem 1rem;margin-bottom:1rem;color:var(--success);font-size:.85rem;font-weight:600;"><%= flash.success[0] %></div><% } %>
+        <form method="POST" action="/contact">
+          <div class="row g-3">
+            <div class="col-12 col-sm-6"><label class="nx-label">Nom *</label><input type="text" name="nom" class="nx-input" required></div>
+            <div class="col-12 col-sm-6"><label class="nx-label">Email *</label><input type="email" name="email" class="nx-input" required></div>
+            <div class="col-12"><label class="nx-label">Sujet</label><input type="text" name="sujet" class="nx-input"></div>
+            <div class="col-12"><label class="nx-label">Message *</label><textarea name="message" class="nx-input" rows="5" required></textarea></div>
+            <div class="col-12"><button type="submit" class="btn-nx-primary w-100"><i class="bi bi-send-fill"></i>Envoyer</button></div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('../partials/footer') %>

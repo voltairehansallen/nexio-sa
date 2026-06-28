@@ -1,0 +1,15 @@
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="hamburger" id="hamburger" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+    <h1><%= title %></h1>
+  </div>
+  <div class="tb-right">
+    <div class="tb-links">
+      <a href="/" class="tb-link" target="_blank"><i class="bi bi-shop"></i>Boutique</a>
+    </div>
+    <div class="tb-user">
+      <div class="tb-avatar"><%= (user.prenom||'A').charAt(0).toUpperCase()+(user.nom||'').charAt(0).toUpperCase() %></div>
+      <span><%= user.prenom %> <%= user.nom %></span>
+    </div>
+  </div>
+</div>
