@@ -7,44 +7,52 @@ const logger = require('../config/logger');
 
 const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions';
 const MODEL      = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
-const API_KEY    = () => process.env.GROQ_API_KEY || '';
 const TEMP       = 0.7;
 const MAX_TOKENS = 1024;
 const TIMEOUT    = 30000;
 const MAX_RETRY  = 3;
 
+// Vérification clé au démarrage
+setTimeout(() => {
+  const key = process.env.GROQ_API_KEY || '';
+  if (!key || key === 'VOTRE_CLE_GROQ_ICI') {
+    console.warn('⚠️  GROQ_API_KEY non configurée — mode démo actif');
+  } else {
+    console.log('✅ Groq API configurée — modèle:', process.env.GROQ_MODEL || 'llama-3.3-70b-versatile');
+  }
+}, 1000);
+
 // Cache mémoire simple (TTL 5 min)
 const _cache = new Map();
 const CACHE_TTL = 5 * 60 * 1000;
-
-function cacheGet(key)        { const e = _cache.get(key); return (e && Date.now() < e.exp) ? e.val : null; }
-function cacheSet(key, val)   { _cache.set(key, { val, exp: Date.now() + CACHE_TTL }); }
+function cacheGet(key) { const e = _cache.get(key); return (e && Date.now() < e.exp) ? e.val : null; }
+function cacheSet(key, val) { _cache.set(key, { val, exp: Date.now() + CACHE_TTL }); }
 
 const SYSTEM_DEFAULT = `Tu es l'assistant IA de Nexio S.A., plateforme e-commerce de matériel informatique à Port-au-Prince, Haïti.
 Réponds toujours en français, de façon professionnelle et concise.
 Nexio S.A. : Delmas, Port-au-Prince | Lun-Sam 8h-18h | MonCash, NatCash, Visa.`;
 
 /**
- * Fonction principale — tous les agents passent par ici
+ * Fonction principale
  */
 async function generate(prompt, options = {}) {
   const {
-    system     = SYSTEM_DEFAULT,
-    maxTokens  = MAX_TOKENS,
-    temperature= TEMP,
-    useCache   = false,
+    system      = SYSTEM_DEFAULT,
+    maxTokens   = MAX_TOKENS,
+    temperature = TEMP,
+    useCache    = false,
   } = options;
 
-  const cacheKey = useCache ? `${prompt.slice(0, 100)}` : null;
+  const cacheKey = useCache ? prompt.slice(0, 100) : null;
   if (useCache && cacheKey) {
     const cached = cacheGet(cacheKey);
     if (cached) return cached;
   }
 
-  const key = API_KEY();
+  const key = process.env.GROQ_API_KEY || '';
   if (!key || key === 'VOTRE_CLE_GROQ_ICI') {
     logger.warn('GROQ_API_KEY non configurée — mode démo');
-    return '[Démo] Service IA non configuré. Ajoutez GROQ_API_KEY dans .env';
+    return demoResponse(prompt);
   }
 
   let lastErr = null;
@@ -56,32 +64,53 @@ async function generate(prompt, options = {}) {
         max_tokens:  maxTokens,
         temperature,
       }, {
-        headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+        headers: {
+          Authorization: `Bearer ${key}`,
+          'Content-Type': 'application/json',
+        },
         timeout: TIMEOUT,
       });
+
       const content = resp.data.choices[0].message.content;
       if (useCache && cacheKey) cacheSet(cacheKey, content);
       logger.info(`Groq OK | tentative=${attempt} | tokens=${resp.data.usage?.total_tokens || '?'}`);
       return content;
+
     } catch (err) {
       lastErr = err;
-      logger.warn(`Groq tentative ${attempt} échouée : ${err.message}`);
-      if (err.response?.status === 401 || err.response?.status === 403) break;
+      const status = err.response?.status;
+      const detail = err.response?.data?.error?.message || err.message;
+      logger.warn(`Groq tentative ${attempt} échouée (${status}) : ${detail}`);
+
+      // Erreur clé invalide — pas la peine de réessayer
+      if (status === 401 || status === 403) {
+        logger.error('Groq : clé API invalide ou expirée. Vérifiez GROQ_API_KEY dans Railway Variables.');
+        break;
+      }
+      // Attendre avant retry
       if (attempt < MAX_RETRY) await new Promise(r => setTimeout(r, 2000 * attempt));
     }
   }
-  logger.error(`Groq ÉCHEC : ${lastErr?.message}`);
-  return `[Erreur IA] Service temporairement indisponible.`;
+
+  logger.error(`Groq ÉCHEC final : ${lastErr?.message}`);
+  return demoResponse(prompt);
 }
 
-// ── Méthodes spécialisées ────────────────────────────────────
+// Réponse de démo si Groq indisponible
+function demoResponse(prompt) {
+  if (prompt.includes('recommand')) return JSON.stringify([{id_produit:1,raison:'Produit populaire',score:0.8}]);
+  if (prompt.includes('sentiment')) return JSON.stringify({sentiment:'positif',score:0.8,résumé:'Avis favorable'});
+  if (prompt.includes('JSON'))      return JSON.stringify({message:'Service IA en mode démo',ok:true});
+  return 'Service IA temporairement en mode démo. Vérifiez GROQ_API_KEY dans Railway Variables.';
+}
+
+// ── Méthodes spécialisées ─────────────────────────────────────
 
 async function analyze(data, context = '') {
   const prompt = `${context}\n\nDonnées:\n${JSON.stringify(data, null, 2)}\n\nRéponds UNIQUEMENT en JSON valide, sans markdown ni backticks.`;
   const raw = await generate(prompt, { maxTokens: 1500 });
-  try {
-    return JSON.parse(raw.replace(/```json|```/g, '').trim());
-  } catch { return { raw, error: 'JSON invalide' }; }
+  try { return JSON.parse(raw.replace(/```json|```/g, '').trim()); }
+  catch { return { raw, error: 'JSON invalide' }; }
 }
 
 async function recommend(userData, products) {
@@ -111,7 +140,7 @@ async function detectFraud(orderData) {
 }
 
 async function forecastSales(historique) {
-  const prompt = `Données ventes (30 derniers jours):\n${JSON.stringify(historique)}\nPrévois les 7 prochains jours. Réponds UNIQUEMENT en JSON: {"previsions":[{"date":"YYYY-MM-DD","ventes_estimees":5,"ca_estime":50000}],"tendance":"hausse|baisse|stable","confiance":0.8}`;
+  const prompt = `Données ventes:\n${JSON.stringify(historique)}\nPrévois les 7 prochains jours. Réponds UNIQUEMENT en JSON: {"previsions":[{"date":"YYYY-MM-DD","ventes_estimees":5,"ca_estime":50000}],"tendance":"hausse|baisse|stable","confiance":0.8}`;
   const raw = await generate(prompt, { maxTokens: 600 });
   try { return JSON.parse(raw.replace(/```json|```/g,'').trim()); }
   catch { return { previsions: [], tendance: 'stable', confiance: 0.5 }; }
