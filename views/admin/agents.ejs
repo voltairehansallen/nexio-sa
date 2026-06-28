@@ -312,7 +312,7 @@ async function checkStatus() {
 
   try {
     // Ping simple vers l'API IA Node.js (pas Flask)
-    const r = await fetch(BASE_URL + '/admin/api/ia', {
+    const r = await fetch('/admin/api/ia', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ action:'ping' })
@@ -421,7 +421,7 @@ async function genererMessage() {
   result.style.display = 'none';
 
   try {
-    const r = await fetch(BASE_URL + '/admin/api/message-ia', {
+    const r = await fetch('/admin/api/message-ia', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -491,7 +491,7 @@ async function sauvegarderCampagne() {
   const msg = lastResult.message || {};
   const nom = `Message ${lastResult.canal} — ${currentUser?.prenom||'Client'} — ${new Date().toLocaleDateString('fr-FR')}`;
   try {
-    const r = await fetch(BASE_URL + '/admin/campagnes', {
+    const r = await fetch('/admin/campagnes', {
       method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
       body: new URLSearchParams({
         nom, canal: lastResult.canal,
@@ -544,7 +544,7 @@ async function analyserUnClient(idUser, prenom, btn) {
   btn.disabled = true;
   showToast(`Analyse IA de ${prenom} en cours…`, 'info');
   try {
-    const r = await fetch(BASE_URL + '/admin/api/ia', {
+    const r = await fetch('/admin/api/ia', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ action:'analyser_user', id_user: idUser })
     });
@@ -565,7 +565,7 @@ async function lancerAnalyse(btn) {
   if (el) { el.innerHTML = '<i class="bi bi-hourglass-split spin"></i> Analyse en cours…'; el.disabled = true; }
   showToast('Analyse IA de tous les clients en cours… (peut prendre quelques secondes)', 'info');
   try {
-    const r = await fetch(BASE_URL + '/admin/api/ia', {
+    const r = await fetch('/admin/api/ia', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ action:'analyser_tous' })
     });

@@ -145,7 +145,7 @@ nexForm.addEventListener('submit', async (e) => {
   nexInput.value = '';
   showTyping();
   try {
-    const r = await fetch(BASE_URL + '/api/chat', {
+    const r = await fetch('/api/chat', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ message:msg, session_id: (sessionStorage.getItem('nex_session')||crypto.randomUUID()) })
     });

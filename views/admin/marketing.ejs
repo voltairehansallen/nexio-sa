@@ -133,7 +133,7 @@ async function lancerIA(action) {
   res.style.display = 'block';
   res.innerHTML = '<i class="bi bi-hourglass-split" style="animation:spin .7s linear infinite;margin-right:.5rem;"></i>Analyse IA en cours…';
   try {
-    const r = await fetch(BASE_URL+'/admin/api/ia', {
+    const r = await fetch('/admin/api/ia', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ action, jours:30 })
     });
@@ -166,7 +166,7 @@ async function genererContenu(id, btn) {
   if(!confirm('Générer le contenu de cette campagne avec NEX IA ?')) return;
   const orig=btn.innerHTML; btn.innerHTML='<i class="bi bi-hourglass-split"></i>'; btn.disabled=true;
   try {
-    const r=await fetch(BASE_URL+'/admin/api/ia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'generer_campagne',id_campagne:id})});
+    const r=await fetch('/admin/api/ia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'generer_campagne',id_campagne:id})});
     const d=await r.json();
     if(d.error) throw new Error(d.error);
     showToast('✓ Contenu généré par NEX IA !','success');
@@ -179,7 +179,7 @@ async function envoyerCampagne(id, canal, btn) {
   if(!confirm(`Envoyer sur ${canal} ?`)) return;
   const orig=btn.innerHTML; btn.innerHTML='<i class="bi bi-hourglass-split"></i>'; btn.disabled=true;
   try {
-    const r=await fetch(BASE_URL+'/admin/api/ia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'envoyer_campagne',id_campagne:id,canal})});
+    const r=await fetch('/admin/api/ia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'envoyer_campagne',id_campagne:id,canal})});
     const d=await r.json();
     if(d.error) throw new Error(d.error);
     showToast(`✓ ${d.envoyes||0}/${d.destinataires||0} messages envoyés sur ${canal} !`,'success');

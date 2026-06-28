@@ -317,7 +317,7 @@ async function genIA(){
   const firstId=[...sel][0];
   const ton=document.getElementById('campTon').value;
   try{
-    const r=await fetch(BASE_URL+'/admin/api/message-ia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id_user:firstId,canal,ton})});
+    const r=await fetch('/admin/api/message-ia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id_user:firstId,canal,ton})});
     const d=await r.json();
     if(d.error)throw new Error(d.error);
     lastGen={...d,nom,destinataires:[...sel],canal};
@@ -348,7 +348,7 @@ async function envoyerMaint(){
   const msg=lastGen.message||{};
   try{
     const fd=new URLSearchParams({nom:lastGen.nom,canal:lastGen.canal,contenu:msg.message||msg.contenu||'',statut:'Envoyée',date_envoi:new Date().toISOString().slice(0,16)});
-    await fetch(BASE_URL+'/admin/campagnes',{method:'POST',body:fd});
+    await fetch('/admin/campagnes',{method:'POST',body:fd});
     toast(`✓ Campagne envoyée à ${lastGen.destinataires.length} client(s) !`,'success');
     setTimeout(()=>location.reload(),1800);
   }catch(e){toast('Erreur : '+e.message,'error');}
@@ -360,24 +360,24 @@ async function confirmerPlanif(){
   if(!date||!lastGen)return;
   const msg=lastGen.message||{};
   const fd=new URLSearchParams({nom:lastGen.nom,canal:lastGen.canal,contenu:msg.message||'',statut:'Planifiée',date_envoi:date});
-  await fetch(BASE_URL+'/admin/campagnes',{method:'POST',body:fd});
+  await fetch('/admin/campagnes',{method:'POST',body:fd});
   toast(`✓ Planifiée pour le ${new Date(date).toLocaleString('fr-FR')} !`,'success');
   document.getElementById('modalPlanif').style.display='none';
   setTimeout(()=>location.reload(),1800);
 }
-async function saveCampagne(){if(!lastGen)return;const msg=lastGen.message||{};const fd=new URLSearchParams({nom:lastGen.nom,canal:lastGen.canal,contenu:msg.message||'',statut:'Brouillon'});await fetch(BASE_URL+'/admin/campagnes',{method:'POST',body:fd});toast('✓ Sauvegardé !','success');setTimeout(()=>location.reload(),1500);}
-async function saveBrouillon(){const nom=document.getElementById('campNom').value.trim();if(!nom){toast('Entrez un nom.','error');return;}const fd=new URLSearchParams({nom,canal,statut:'Brouillon'});await fetch(BASE_URL+'/admin/campagnes',{method:'POST',body:fd});toast('✓ Brouillon sauvegardé !','success');setTimeout(()=>location.reload(),1500);}
+async function saveCampagne(){if(!lastGen)return;const msg=lastGen.message||{};const fd=new URLSearchParams({nom:lastGen.nom,canal:lastGen.canal,contenu:msg.message||'',statut:'Brouillon'});await fetch('/admin/campagnes',{method:'POST',body:fd});toast('✓ Sauvegardé !','success');setTimeout(()=>location.reload(),1500);}
+async function saveBrouillon(){const nom=document.getElementById('campNom').value.trim();if(!nom){toast('Entrez un nom.','error');return;}const fd=new URLSearchParams({nom,canal,statut:'Brouillon'});await fetch('/admin/campagnes',{method:'POST',body:fd});toast('✓ Brouillon sauvegardé !','success');setTimeout(()=>location.reload(),1500);}
 
 /* LISTE ACTIONS */
 async function genContenu(id,btn){
   const orig=btn.innerHTML;btn.innerHTML='<i class="bi bi-hourglass-split spin"></i>';btn.disabled=true;
-  try{const r=await fetch(BASE_URL+'/admin/api/ia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'generer_campagne',id_campagne:id})});const d=await r.json();if(d.error)throw new Error(d.error);btn.innerHTML='<i class="bi bi-check-lg"></i>OK';btn.style.color='#10B981';toast(d.msg||'✓ Contenu généré !','success');setTimeout(()=>{btn.innerHTML=orig;btn.style.color='';btn.disabled=false;},2500);}
+  try{const r=await fetch('/admin/api/ia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'generer_campagne',id_campagne:id})});const d=await r.json();if(d.error)throw new Error(d.error);btn.innerHTML='<i class="bi bi-check-lg"></i>OK';btn.style.color='#10B981';toast(d.msg||'✓ Contenu généré !','success');setTimeout(()=>{btn.innerHTML=orig;btn.style.color='';btn.disabled=false;},2500);}
   catch(e){btn.innerHTML=orig;btn.disabled=false;toast('Erreur : '+e.message,'error');}
 }
 async function envCampagne(id,btn){
   if(!confirm('Envoyer maintenant ?'))return;
   const orig=btn.innerHTML;btn.innerHTML='<i class="bi bi-hourglass-split spin"></i>';btn.disabled=true;
-  try{const r=await fetch(BASE_URL+'/admin/campagnes/envoyer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id_campagne:id})});const d=await r.json();if(d.error)throw new Error(d.error);toast(`✓ ${d.envoyes||0} message(s) envoyé(s) !`,'success');setTimeout(()=>location.reload(),1800);}
+  try{const r=await fetch('/admin/campagnes/envoyer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id_campagne:id})});const d=await r.json();if(d.error)throw new Error(d.error);toast(`✓ ${d.envoyes||0} message(s) envoyé(s) !`,'success');setTimeout(()=>location.reload(),1800);}
   catch(e){toast('Erreur : '+e.message,'error');btn.innerHTML=orig;btn.disabled=false;}
 }
 
@@ -385,7 +385,7 @@ async function envCampagne(id,btn){
 async function genSeg(seg,nom,btn){
   const orig=btn.innerHTML;btn.innerHTML='<i class="bi bi-hourglass-split spin"></i>';btn.disabled=true;
   const el=document.getElementById('sr_'+seg);
-  try{const r=await fetch(BASE_URL+'/admin/api/ia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'generer_campagne',id_campagne:0,segment:seg})});const d=await r.json();const msg=d.data?.contenu||d.contenu||d.msg||'Généré avec succès';el.textContent=msg;el.style.display='';toast(`✓ Campagne "${nom}" générée !`,'success');}
+  try{const r=await fetch('/admin/api/ia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'generer_campagne',id_campagne:0,segment:seg})});const d=await r.json();const msg=d.data?.contenu||d.contenu||d.msg||'Généré avec succès';el.textContent=msg;el.style.display='';toast(`✓ Campagne "${nom}" générée !`,'success');}
   catch(e){toast('Erreur : '+e.message,'error');}
   btn.innerHTML=orig;btn.disabled=false;
 }
@@ -393,7 +393,7 @@ async function envSeg(seg,btn){if(!confirm(`Envoyer à tous les clients du segme
 async function genTousSegs(btn){
   if(!confirm('Générer des campagnes pour tous les 6 segments ?'))return;
   btn.innerHTML='<i class="bi bi-hourglass-split spin"></i>En cours…';btn.disabled=true;
-  try{const r=await fetch(BASE_URL+'/admin/api/ia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'segments'})});const d=await r.json();toast(`✓ ${d.campagnes?.length||6} campagnes générées !`,'success');setTimeout(()=>location.reload(),1800);}
+  try{const r=await fetch('/admin/api/ia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'segments'})});const d=await r.json();toast(`✓ ${d.campagnes?.length||6} campagnes générées !`,'success');setTimeout(()=>location.reload(),1800);}
   catch(e){toast('Erreur : '+e.message,'error');}
   btn.innerHTML='<i class="bi bi-robot"></i>Générer tous';btn.disabled=false;
 }
