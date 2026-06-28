@@ -15,7 +15,7 @@ const MAX_RETRY  = 3;
 // Vérification clé au démarrage
 setTimeout(() => {
   const key = process.env.GROQ_API_KEY || '';
-  if (!key || key === 'gsk_uA5d0FD3wVCSuVDCnuvoWGdyb3FY1G7PL33LL6KaaLnvwkJgnZO') {
+  if (!key || key === 'VOTRE_CLE_GROQ_ICI') {
     console.warn('⚠️  GROQ_API_KEY non configurée — mode démo actif');
   } else {
     console.log('✅ Groq API configurée — modèle:', process.env.GROQ_MODEL || 'llama-3.3-70b-versatile');
