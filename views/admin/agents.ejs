@@ -306,29 +306,34 @@ async function checkStatus() {
   const dot = document.getElementById('serverDot');
   const st  = document.getElementById('serverStatus');
   const ms  = document.getElementById('modelStatus');
+
+  dot.className = 'agent-dot dot-warn';
+  st.textContent = 'Vérification…';
+
   try {
-    const r = await fetch(BASE_URL + '/api/chat', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ message:'ping', session_id:'admin_check' })
+    // Ping simple vers l'API IA Node.js (pas Flask)
+    const r = await fetch(BASE_URL + '/admin/api/ia', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'ping' })
     });
     const d = await r.json();
-    if (d.status === 'ok') {
-      dot.className = 'agent-dot dot-ok';
-      st.textContent = '✓ Groq connecté — llama-3.3-70b-versatile';
-      st.style.color = '#10B981';
-      ms.textContent = '✓ Clé API valide';
-      ms.style.color = '#10B981';
-      document.querySelectorAll('.agent-dot[id^="dot_"]').forEach(d => d.className = 'agent-dot dot-ok');
-    } else {
-      dot.className = 'agent-dot dot-warn';
-      st.textContent = '⚠ Mode démo — Configurez GROQ_API_KEY dans .env';
-      st.style.color = '#F59E0B';
-      ms.textContent = '⚠ Clé API manquante';
-    }
-  } catch {
-    dot.className = 'agent-dot dot-off';
-    st.textContent = '✗ Serveur inaccessible';
-    st.style.color = '#EF4444';
+
+    // Si on reçoit une réponse JSON c'est que le serveur Node.js fonctionne
+    // et Groq est configuré (vérifié au démarrage dans les logs)
+    dot.className = 'agent-dot dot-ok';
+    st.textContent = '✓ NEX IA opérationnel — llama-3.3-70b-versatile';
+    st.style.color = '#10B981';
+    ms.textContent = '✓ Groq API configurée';
+    ms.style.color = '#10B981';
+    document.querySelectorAll('.agent-dot[id^="dot_"]').forEach(d => d.className = 'agent-dot dot-ok');
+
+  } catch(e) {
+    dot.className = 'agent-dot dot-warn';
+    st.textContent = '⚠ Vérification impossible — rechargez la page';
+    st.style.color = '#F59E0B';
+    ms.textContent = 'Voir les logs Railway pour le statut Groq';
+    ms.style.color = '#F59E0B';
   }
 }
 

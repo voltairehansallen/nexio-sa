@@ -267,6 +267,15 @@ exports.apiIA = async (req, res) => {
   try {
     switch (action) {
 
+      case 'ping':
+        return res.json({
+          ok: true,
+          status: 'ok',
+          model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
+          groq: !!(process.env.GROQ_API_KEY && process.env.GROQ_API_KEY !== 'VOTRE_CLE_GROQ_ICI'),
+          env: process.env.NODE_ENV || 'development',
+        });
+
       case 'generer_campagne': {
         const [[camp]] = await db.execute('SELECT * FROM campagnes WHERE id_campagne=?',[id_campagne||0]).catch(()=>[[null]]);
         if (!camp) return res.json({ error:'Campagne introuvable' });
