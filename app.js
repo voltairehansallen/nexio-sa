@@ -1,6 +1,9 @@
 'use strict';
 require('dotenv').config();
 
+const app = express();
+app.set('trust proxy', 1); // ← ajouter cette ligne
+
 const express      = require('express');
 const session      = require('express-session');
 const flash        = require('connect-flash');
