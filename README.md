@@ -65,5 +65,3 @@ APP_URL=https://votre-app.railway.app
 { "action": "previsions" }
 { "action": "segments" }
 ```
-"# nexio-sa" 
-"# nexio-sa" 

@@ -110,3 +110,42 @@ router.get('/admin/marketing',                   A, adminCtrl.marketingIA);
 router.get('/admin/agents',              A, adminCtrl.agentsIA);
 router.post('/admin/api/message-ia',     A, adminCtrl.apiMessagePersonnalise);
 router.post('/admin/campagnes/envoyer', A, adminCtrl.apiEnvoiCampagne);
+
+// ── Route test agents IA ──────────────────────────────────────
+router.get('/admin/test-ia', A, async (req, res) => {
+  const groq   = require('../services/groq.service');
+  const db     = require('../config/db');
+  const result = {};
+
+  // Test 1 — Groq
+  try {
+    const rep = await groq.generate('Dis juste "Nexio IA opérationnel" en français.', { maxTokens:30 });
+    result.groq = { ok: true, reponse: rep };
+  } catch(e) {
+    result.groq = { ok: false, erreur: e.message };
+  }
+
+  // Test 2 — MySQL
+  try {
+    const [[r]] = await db.execute('SELECT COUNT(*) n FROM users');
+    result.mysql = { ok: true, users: r.n };
+  } catch(e) {
+    result.mysql = { ok: false, erreur: e.message };
+  }
+
+  // Test 3 — Agent comportemental
+  try {
+    const agents = require('../agents');
+    const [users] = await db.execute("SELECT id_user FROM users u JOIN roles r ON u.id_role=r.id_role WHERE r.nom='Client' LIMIT 1");
+    if (users.length) {
+      const analyse = await agents.comportemental.analyserUtilisateur(users[0].id_user);
+      result.agent_comportemental = { ok: true, score: analyse.score_engagement };
+    } else {
+      result.agent_comportemental = { ok: false, erreur: 'Aucun client' };
+    }
+  } catch(e) {
+    result.agent_comportemental = { ok: false, erreur: e.message };
+  }
+
+  res.json(result);
+});
