@@ -66,3 +66,4 @@ APP_URL=https://votre-app.railway.app
 { "action": "segments" }
 ```
 "# nexio-sa" 
+"# nexio-sa" 
