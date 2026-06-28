@@ -1,9 +1,6 @@
 'use strict';
 require('dotenv').config();
 
-const app = express();
-app.set('trust proxy', 1); // ← ajouter cette ligne
-
 const express      = require('express');
 const session      = require('express-session');
 const flash        = require('connect-flash');
@@ -21,8 +18,11 @@ const { setLocals } = require('./src/middlewares/auth.middleware');
 
 const app = express();
 
+// ── Trust proxy (Railway, Render…) ───────────────────────────
+app.set('trust proxy', 1);
+
 // ── Sécurité ──────────────────────────────────────────────────
-app.use(helmet({ contentSecurityPolicy: false }));  // CSP désactivé pour CDN
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({ origin: process.env.APP_URL || '*', credentials: true }));
 
 // ── Rate limiting ─────────────────────────────────────────────
@@ -51,7 +51,7 @@ app.use(methodOverride('_method'));
 
 // ── File upload ───────────────────────────────────────────────
 app.use(fileUpload({
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 5 * 1024 * 1024 },
   abortOnLimit: true,
   createParentPath: true,
 }));
@@ -65,14 +65,14 @@ app.use(session({
     httpOnly: true,
     secure:   process.env.NODE_ENV === 'production',
     sameSite: 'strict',
-    maxAge:   7 * 24 * 60 * 60 * 1000, // 7 jours
+    maxAge:   7 * 24 * 60 * 60 * 1000,
   },
 }));
 
 // ── Flash messages ────────────────────────────────────────────
 app.use(flash());
 
-// ── Locals partagées (user, flash, panier…) ───────────────────
+// ── Locals partagées ──────────────────────────────────────────
 app.use(setLocals);
 
 // ── Routes ────────────────────────────────────────────────────
